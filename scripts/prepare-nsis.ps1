@@ -1,6 +1,7 @@
 param(
     [string]$Version = "3.12",
-    [string]$ExpectedSha256 = "56581F90DB321581C5381193D796FFFCF2D24B2F8FED2160A6C6A3BAA67F2C4F"
+    [string]$ExpectedSha256 = "56581F90DB321581C5381193D796FFFCF2D24B2F8FED2160A6C6A3BAA67F2C4F",
+    [long]$ExpectedSize = 2362938
 )
 
 $ErrorActionPreference = "Stop"
@@ -8,10 +9,18 @@ Set-StrictMode -Version Latest
 
 $workRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("ds1k-nsis-{0}-{1}" -f $Version, [guid]::NewGuid().ToString("N"))
 $archive = Join-Path $workRoot ("nsis-{0}.zip" -f $Version)
-$url = "https://sourceforge.net/projects/nsis/files/NSIS%203/$Version/nsis-$Version.zip/download"
+$url = "https://downloads.sourceforge.net/project/nsis/NSIS%203/$Version/nsis-$Version.zip"
 
 New-Item -ItemType Directory -Path $workRoot | Out-Null
-Invoke-WebRequest -Uri $url -OutFile $archive
+& curl.exe --fail --location --silent --show-error --retry 3 --retry-delay 2 --output $archive $url
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to download NSIS $Version (curl exit code $LASTEXITCODE)."
+}
+
+$actualSize = (Get-Item -LiteralPath $archive).Length
+if ($actualSize -ne $ExpectedSize) {
+    throw "NSIS archive size mismatch. Expected $ExpectedSize bytes, got $actualSize."
+}
 
 $actualSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash
 if ($actualSha256 -ne $ExpectedSha256) {
