@@ -23,7 +23,13 @@ SetCompressorDictSize 32
 !define PRODUCT_PUBLISHER "YJSoft"
 !define REPO_ROOT "${__FILEDIR__}\.."
 !define PATCH_FILE "${REPO_ROOT}\packaging\patches\deadspace1-kr-v0.1.pat"
-!define UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\DeadSpace1KR"
+!ifdef TEST_BUILD
+  !define PATCH_REG_ROOT HKCU
+  !define UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\DeadSpace1KR-Test"
+!else
+  !define PATCH_REG_ROOT HKLM
+  !define UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\DeadSpace1KR"
+!endif
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 Caption "${PRODUCT_NAME} ${PRODUCT_VERSION}"
@@ -65,6 +71,13 @@ Var BackupDir
 Var PatchResult
 Var FontSource
 Var TextSource
+Var UpgradeDetected
+Var ExistingBuild
+Var BackupRecoveryNeeded
+Var FontPatchOk
+Var TextPatchOk
+Var RestoreFailed
+Var InstallStage
 
 !macro BackupRuntime FILE TAG
   IfFileExists "$BackupDir\runtime\${FILE}" backup_${TAG}_done
@@ -87,11 +100,46 @@ backup_${TAG}_done:
   IfFileExists "$BackupDir\runtime\${FILE}" 0 ${PREFIX}_restore_${TAG}_absent
   ClearErrors
   CopyFiles /SILENT "$BackupDir\runtime\${FILE}" "$INSTDIR\${FILE}"
+  IfErrors 0 +2
+  StrCpy $RestoreFailed "1"
   Goto ${PREFIX}_restore_${TAG}_done
 ${PREFIX}_restore_${TAG}_absent:
   IfFileExists "$BackupDir\runtime\${FILE}.absent" 0 ${PREFIX}_restore_${TAG}_done
+  ClearErrors
   Delete "$INSTDIR\${FILE}"
+  IfErrors 0 +2
+  StrCpy $RestoreFailed "1"
 ${PREFIX}_restore_${TAG}_done:
+!macroend
+
+!macro CheckRuntimeBackup FILE TAG
+  IfFileExists "$BackupDir\runtime\${FILE}" check_runtime_${TAG}_done
+  IfFileExists "$BackupDir\runtime\${FILE}.absent" check_runtime_${TAG}_done
+  StrCpy $BackupRecoveryNeeded "1"
+check_runtime_${TAG}_done:
+!macroend
+
+!macro RepairRuntimeBackup FILE TAG
+  IfFileExists "$BackupDir\runtime\${FILE}" repair_runtime_${TAG}_done
+  IfFileExists "$BackupDir\runtime\${FILE}.absent" repair_runtime_${TAG}_done
+  ClearErrors
+  FileOpen $0 "$BackupDir\runtime\${FILE}.absent" w
+  IfErrors backup_error
+  FileWrite $0 "absent$\r$\n"
+  FileClose $0
+repair_runtime_${TAG}_done:
+!macroend
+
+!macro TryVpatch SOURCE OUTPUT FLAG TAG
+  StrCpy ${FLAG} "0"
+  Delete "${OUTPUT}"
+  vpatch::vpatchfile "$PLUGINSDIR\deadspace1-kr-v0.1.pat" "${SOURCE}" "${OUTPUT}"
+  Pop $PatchResult
+  StrCpy $0 $PatchResult 2
+  StrCmp $0 "OK" 0 try_vpatch_${TAG}_done
+  IfFileExists "${OUTPUT}" 0 try_vpatch_${TAG}_done
+  StrCpy ${FLAG} "1"
+try_vpatch_${TAG}_done:
 !macroend
 
 Function .onInit
@@ -124,10 +172,19 @@ Function un.onInit
 FunctionEnd
 
 Function RestoreInstalledFiles
-  IfFileExists "$BackupDir\text_assets\text_assets_global.str" 0 +2
+  StrCpy $RestoreFailed "0"
+  IfFileExists "$BackupDir\text_assets\text_assets_global.str" 0 restore_installed_font_done
+  ClearErrors
   CopyFiles /SILENT "$BackupDir\text_assets\text_assets_global.str" "$INSTDIR\text_assets\text_assets_global.str"
-  IfFileExists "$BackupDir\text_assets\text\D8CBB618.str" 0 +2
+  IfErrors 0 +2
+  StrCpy $RestoreFailed "1"
+restore_installed_font_done:
+  IfFileExists "$BackupDir\text_assets\text\D8CBB618.str" 0 restore_installed_text_done
+  ClearErrors
   CopyFiles /SILENT "$BackupDir\text_assets\text\D8CBB618.str" "$INSTDIR\text_assets\text\D8CBB618.str"
+  IfErrors 0 +2
+  StrCpy $RestoreFailed "1"
+restore_installed_text_done:
   !insertmacro RestoreRuntime "ds1k_utf8.dll" "ds1k" "install"
   !insertmacro RestoreRuntime "xinput1_3.dll" "xinput" "install"
   !insertmacro RestoreRuntime "SDL3.dll" "sdl" "install"
@@ -136,56 +193,118 @@ FunctionEnd
 
 Section "한국어 개선 패치" SecMain
   SectionIn RO
+  StrCpy $InstallStage "초기화"
   StrCpy $BackupDir "$INSTDIR\DS1K_Backup_v0.1"
   StrCpy $FontSource "$INSTDIR\text_assets\text_assets_global.str"
   StrCpy $TextSource "$INSTDIR\text_assets\text\D8CBB618.str"
+  StrCpy $UpgradeDetected "0"
+  StrCpy $ExistingBuild ""
+  StrCpy $BackupRecoveryNeeded "0"
 
-  IfFileExists "$BackupDir\text_assets\text_assets_global.str" 0 +2
+  ReadRegStr $ExistingBuild ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "BuildCommit"
+  IfFileExists "$INSTDIR\DS1K_Patch\installed-version.txt" upgrade_found
+  ReadRegStr $0 ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "InstallLocation"
+  StrCmp $0 "$INSTDIR" upgrade_found upgrade_detection_done
+upgrade_found:
+  StrCpy $UpgradeDetected "1"
+upgrade_detection_done:
+
+  StrCmp $UpgradeDetected "1" 0 upgrade_sources_ready
+  StrCmp $ExistingBuild "" 0 +2
+  StrCpy $ExistingBuild "(기록 없음)"
+  DetailPrint "기존 한국어 패치 설치를 발견했습니다: $ExistingBuild"
+
+  IfFileExists "$BackupDir\text_assets\text_assets_global.str" 0 upgrade_backup_incomplete
+  IfFileExists "$BackupDir\text_assets\text\D8CBB618.str" 0 upgrade_backup_incomplete
+  !insertmacro CheckRuntimeBackup "ds1k_utf8.dll" "ds1k"
+  !insertmacro CheckRuntimeBackup "xinput1_3.dll" "xinput"
+  !insertmacro CheckRuntimeBackup "SDL3.dll" "sdl"
+  !insertmacro CheckRuntimeBackup "DeadSpaceFixes.ini" "config"
+  StrCmp $BackupRecoveryNeeded "1" upgrade_backup_incomplete
   StrCpy $FontSource "$BackupDir\text_assets\text_assets_global.str"
-  IfFileExists "$BackupDir\text_assets\text\D8CBB618.str" 0 +2
   StrCpy $TextSource "$BackupDir\text_assets\text\D8CBB618.str"
+  Goto upgrade_sources_ready
+
+upgrade_backup_incomplete:
+  StrCpy $BackupRecoveryNeeded "1"
+  DetailPrint "기존 원본 백업이 불완전합니다. 현재 Steam 파일을 검사합니다."
+
+upgrade_sources_ready:
 
   DetailPrint "Steam 원본 STR를 검증하고 한국어 STR를 생성하는 중..."
   InitPluginsDir
+  StrCmp $UpgradeDetected "1" 0 config_snapshot_done
+  IfFileExists "$INSTDIR\DeadSpaceFixes.ini" 0 config_snapshot_done
+  ClearErrors
+  CopyFiles /SILENT "$INSTDIR\DeadSpaceFixes.ini" "$PLUGINSDIR\previous-DeadSpaceFixes.ini"
+  IfErrors snapshot_error
+config_snapshot_done:
+
   SetOutPath "$PLUGINSDIR"
   File /oname=deadspace1-kr-v0.1.pat "${PATCH_FILE}"
 
-  vpatch::vpatchfile "$PLUGINSDIR\deadspace1-kr-v0.1.pat" "$FontSource" "$PLUGINSDIR\text_assets_global.str"
-  Pop $PatchResult
-  StrCpy $0 $PatchResult 2
-  StrCmp $0 "OK" font_patch_ok
-  Goto patch_error
-font_patch_ok:
-  IfFileExists "$PLUGINSDIR\text_assets_global.str" 0 patch_error
+patch_attempt:
+  !insertmacro TryVpatch "$FontSource" "$PLUGINSDIR\text_assets_global.str" "$FontPatchOk" "font_source"
+  StrCmp $FontPatchOk "1" 0 patch_attempt_failed
+  !insertmacro TryVpatch "$TextSource" "$PLUGINSDIR\D8CBB618.str" "$TextPatchOk" "text_source"
+  StrCmp $TextPatchOk "1" patch_ready
 
-  vpatch::vpatchfile "$PLUGINSDIR\deadspace1-kr-v0.1.pat" "$TextSource" "$PLUGINSDIR\D8CBB618.str"
-  Pop $PatchResult
-  StrCpy $0 $PatchResult 2
-  StrCmp $0 "OK" text_patch_ok
-  Goto patch_error
-text_patch_ok:
-  IfFileExists "$PLUGINSDIR\D8CBB618.str" 0 patch_error
+patch_attempt_failed:
+  StrCmp $UpgradeDetected "1" 0 patch_error
+  StrCmp $BackupRecoveryNeeded "1" upgrade_backup_error
+  StrCpy $BackupRecoveryNeeded "1"
+  StrCpy $FontSource "$INSTDIR\text_assets\text_assets_global.str"
+  StrCpy $TextSource "$INSTDIR\text_assets\text\D8CBB618.str"
+  DetailPrint "원본 백업 검증에 실패했습니다. 현재 Steam 파일로 복구를 시도합니다."
+  Goto patch_attempt
+
+patch_ready:
+  DetailPrint "두 STR의 생성과 검증이 완료되었습니다."
 
   DetailPrint "원본 파일을 백업하는 중..."
   CreateDirectory "$BackupDir\text_assets\text"
   CreateDirectory "$BackupDir\runtime"
 
-  IfFileExists "$BackupDir\text_assets\text_assets_global.str" font_backup_done
+  StrCmp $UpgradeDetected "1" upgrade_prepare
   ClearErrors
   CopyFiles /SILENT "$INSTDIR\text_assets\text_assets_global.str" "$BackupDir\text_assets\text_assets_global.str"
   IfErrors backup_error
-font_backup_done:
-  IfFileExists "$BackupDir\text_assets\text\D8CBB618.str" text_backup_done
   ClearErrors
   CopyFiles /SILENT "$INSTDIR\text_assets\text\D8CBB618.str" "$BackupDir\text_assets\text\D8CBB618.str"
   IfErrors backup_error
-text_backup_done:
-
   !insertmacro BackupRuntime "ds1k_utf8.dll" "ds1k"
   !insertmacro BackupRuntime "xinput1_3.dll" "xinput"
   !insertmacro BackupRuntime "SDL3.dll" "sdl"
   !insertmacro BackupRuntime "DeadSpaceFixes.ini" "config"
+  Goto originals_ready
 
+upgrade_prepare:
+  StrCmp $BackupRecoveryNeeded "1" upgrade_recovery_prepare
+  DetailPrint "백업한 원본 파일로 기존 패치를 복원하는 중..."
+  Call RestoreInstalledFiles
+  StrCmp $RestoreFailed "1" upgrade_restore_error
+  IfFileExists "$PLUGINSDIR\previous-DeadSpaceFixes.ini" 0 originals_ready
+  ClearErrors
+  CopyFiles /SILENT "$PLUGINSDIR\previous-DeadSpaceFixes.ini" "$INSTDIR\DeadSpaceFixes.ini"
+  IfErrors upgrade_restore_error
+  Goto originals_ready
+
+upgrade_recovery_prepare:
+  DetailPrint "Steam에서 복원한 원본 파일로 백업을 재구성하는 중..."
+  ClearErrors
+  CopyFiles /SILENT "$INSTDIR\text_assets\text_assets_global.str" "$BackupDir\text_assets\text_assets_global.str"
+  IfErrors backup_error
+  ClearErrors
+  CopyFiles /SILENT "$INSTDIR\text_assets\text\D8CBB618.str" "$BackupDir\text_assets\text\D8CBB618.str"
+  IfErrors backup_error
+  !insertmacro RepairRuntimeBackup "ds1k_utf8.dll" "ds1k"
+  !insertmacro RepairRuntimeBackup "xinput1_3.dll" "xinput"
+  !insertmacro RepairRuntimeBackup "SDL3.dll" "sdl"
+  !insertmacro RepairRuntimeBackup "DeadSpaceFixes.ini" "config"
+
+originals_ready:
+
+  StrCpy $InstallStage "한국어 STR 설치"
   DetailPrint "한국어 STR와 런타임 파일을 설치하는 중..."
   ClearErrors
   CopyFiles /SILENT "$PLUGINSDIR\text_assets_global.str" "$INSTDIR\text_assets\text_assets_global.str"
@@ -196,15 +315,23 @@ text_backup_done:
 
   SetOverwrite on
   SetOutPath "$INSTDIR"
+  StrCpy $InstallStage "런타임 DLL 설치"
+  ClearErrors
   File /oname=ds1k_utf8.dll "${REPO_ROOT}\dist\ds1k_utf8.dll"
   File /oname=xinput1_3.dll "${REPO_ROOT}\dist\xinput1_3.dll"
   File /oname=SDL3.dll "${REPO_ROOT}\dist\SDL3.dll"
+  IfErrors install_error
 
-  SetOverwrite off
+  StrCpy $InstallStage "설정 파일 설치"
+  IfFileExists "$INSTDIR\DeadSpaceFixes.ini" config_install_done
+  ClearErrors
   File /oname=DeadSpaceFixes.ini "${REPO_ROOT}\dist\DeadSpaceFixes.ini"
-  SetOverwrite on
+  IfErrors install_error
+config_install_done:
 
+  StrCpy $InstallStage "설명 및 라이선스 설치"
   SetOutPath "$INSTDIR\DS1K_Patch"
+  ClearErrors
   File /oname=README_KO.txt "${REPO_ROOT}\docs\INSTALL_KO.txt"
   File "${REPO_ROOT}\THIRD_PARTY_NOTICES.txt"
   File "${REPO_ROOT}\packaging\patches\manifest.json"
@@ -215,19 +342,57 @@ text_backup_done:
   File /oname=NanumBarunGothic-OFL-1.1.txt "${REPO_ROOT}\third_party\NanumBarunGothic\OFL-1.1.txt"
   File "${REPO_ROOT}\third_party\licenses\NSIS-COPYING.txt"
   File "${REPO_ROOT}\third_party\licenses\VPatch-zlib.txt"
+  IfErrors install_error
 
+  StrCpy $InstallStage "제거 프로그램 생성"
+  ClearErrors
   WriteUninstaller "$INSTDIR\DS1K_Patch\Uninstall.exe"
+  IfErrors install_error
+  StrCpy $InstallStage "설치 버전 기록"
+  ClearErrors
   FileOpen $0 "$INSTDIR\DS1K_Patch\installed-version.txt" w
+  IfErrors install_error
   FileWrite $0 "Dead Space 1 KR ${PRODUCT_VERSION}$\r$\nCommit ${GIT_HASH}$\r$\n"
   FileClose $0
 
-  WriteRegStr HKLM "${UNINSTALL_KEY}" "DisplayName" "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-  WriteRegStr HKLM "${UNINSTALL_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
-  WriteRegStr HKLM "${UNINSTALL_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
-  WriteRegStr HKLM "${UNINSTALL_KEY}" "InstallLocation" "$INSTDIR"
-  WriteRegStr HKLM "${UNINSTALL_KEY}" "UninstallString" "$\"$INSTDIR\DS1K_Patch\Uninstall.exe$\""
-  WriteRegDWORD HKLM "${UNINSTALL_KEY}" "NoModify" 1
-  WriteRegDWORD HKLM "${UNINSTALL_KEY}" "NoRepair" 1
+!ifndef TEST_BUILD
+  StrCpy $InstallStage "레지스트리 DisplayName 기록"
+  ClearErrors
+  WriteRegStr ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "DisplayName" "${PRODUCT_NAME} ${PRODUCT_VERSION}"
+  IfErrors install_error
+  StrCpy $InstallStage "레지스트리 DisplayVersion 기록"
+  ClearErrors
+  WriteRegStr ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
+  IfErrors install_error
+  StrCpy $InstallStage "레지스트리 Publisher 기록"
+  ClearErrors
+  WriteRegStr ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
+  IfErrors install_error
+  StrCpy $InstallStage "레지스트리 InstallLocation 기록"
+  ClearErrors
+  WriteRegStr ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "InstallLocation" "$INSTDIR"
+  IfErrors install_error
+  StrCpy $InstallStage "레지스트리 BuildCommit 기록"
+  ClearErrors
+  WriteRegStr ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "BuildCommit" "${GIT_HASH}"
+  IfErrors install_error
+  StrCpy $InstallStage "레지스트리 BackupDirectory 기록"
+  ClearErrors
+  WriteRegStr ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "BackupDirectory" "$BackupDir"
+  IfErrors install_error
+  StrCpy $InstallStage "레지스트리 UninstallString 기록"
+  ClearErrors
+  WriteRegStr ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "UninstallString" "$\"$INSTDIR\DS1K_Patch\Uninstall.exe$\""
+  IfErrors install_error
+  StrCpy $InstallStage "레지스트리 NoModify 기록"
+  ClearErrors
+  WriteRegDWORD ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "NoModify" 1
+  IfErrors install_error
+  StrCpy $InstallStage "레지스트리 NoRepair 기록"
+  ClearErrors
+  WriteRegDWORD ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "NoRepair" 1
+  IfErrors install_error
+!endif
   Goto install_done
 
 patch_error:
@@ -239,6 +404,19 @@ patch_error:
   MessageBox MB_ICONSTOP|MB_OK "원본 STR 검증 또는 변환에 실패했습니다.$\r$\n$\r$\nSteam판 Dead Space (2008) 1.0.0.222의 깨끗한 원본 파일이 필요합니다. Steam에서 파일 무결성 검사를 한 뒤 다시 실행하십시오.$\r$\n$\r$\n상세 결과: $PatchResult" /SD IDOK
   Abort
 
+upgrade_backup_error:
+!ifdef TEST_BUILD
+  FileOpen $0 "$INSTDIR\installer-test.log" w
+  FileWrite $0 "upgrade_backup_error: $PatchResult$\r$\nexisting_build: $ExistingBuild$\r$\nnew_build: ${GIT_HASH}$\r$\nfont_source: $FontSource$\r$\ntext_source: $TextSource$\r$\n"
+  FileClose $0
+!endif
+  MessageBox MB_ICONSTOP|MB_OK "기존 패치의 원본 백업이 없거나 손상되어 안전하게 업그레이드할 수 없습니다.$\r$\n$\r$\n게임 파일은 변경하지 않았습니다. Steam에서 Dead Space의 '설치된 파일 무결성 확인'을 실행해 원본 파일을 복원한 뒤 이 설치 파일을 다시 실행하십시오.$\r$\n$\r$\n다른 모드를 사용 중이면 먼저 별도로 백업하십시오." /SD IDOK
+  Abort
+
+snapshot_error:
+  MessageBox MB_ICONSTOP|MB_OK "기존 DeadSpaceFixes.ini 설정을 임시 보관할 수 없어 업그레이드를 중단했습니다. 게임 파일은 변경하지 않았습니다." /SD IDOK
+  Abort
+
 backup_error:
 !ifdef TEST_BUILD
   FileOpen $0 "$INSTDIR\installer-test.log" w
@@ -248,15 +426,34 @@ backup_error:
   MessageBox MB_ICONSTOP|MB_OK "원본 파일 백업에 실패했습니다. 디스크 공간과 폴더 쓰기 권한을 확인하십시오. 게임 파일은 변경하지 않았습니다." /SD IDOK
   Abort
 
+upgrade_restore_error:
+!ifdef TEST_BUILD
+  FileOpen $0 "$INSTDIR\installer-test.log" w
+  FileWrite $0 "upgrade_restore_error$\r$\nexisting_build: $ExistingBuild$\r$\nnew_build: ${GIT_HASH}$\r$\n"
+  FileClose $0
+!endif
+  DetailPrint "업그레이드 복원 실패: 원본 상태로 되돌립니다."
+  Call RestoreInstalledFiles
+  IfFileExists "$PLUGINSDIR\previous-DeadSpaceFixes.ini" 0 +2
+  CopyFiles /SILENT "$PLUGINSDIR\previous-DeadSpaceFixes.ini" "$INSTDIR\DeadSpaceFixes.ini"
+  DeleteRegKey ${PATCH_REG_ROOT} "${UNINSTALL_KEY}"
+  RMDir /r "$INSTDIR\DS1K_Patch"
+  MessageBox MB_ICONSTOP|MB_OK "기존 패치 복원 중 오류가 발생해 원본 상태로 되돌렸습니다. Dead Space가 실행 중인지 확인한 뒤 다시 설치하십시오." /SD IDOK
+  Abort
+
 install_error:
 !ifdef TEST_BUILD
   FileOpen $0 "$INSTDIR\installer-test.log" w
-  FileWrite $0 "install_error$\r$\n"
+  FileWrite $0 "install_error: $InstallStage$\r$\n"
   FileClose $0
 !endif
   DetailPrint "설치 실패: 백업에서 원본 파일을 복원합니다."
   Call RestoreInstalledFiles
-  MessageBox MB_ICONSTOP|MB_OK "파일 설치에 실패하여 원본을 복원했습니다. Dead Space가 실행 중인지 확인한 뒤 다시 시도하십시오." /SD IDOK
+  IfFileExists "$PLUGINSDIR\previous-DeadSpaceFixes.ini" 0 +2
+  CopyFiles /SILENT "$PLUGINSDIR\previous-DeadSpaceFixes.ini" "$INSTDIR\DeadSpaceFixes.ini"
+  DeleteRegKey ${PATCH_REG_ROOT} "${UNINSTALL_KEY}"
+  RMDir /r "$INSTDIR\DS1K_Patch"
+  MessageBox MB_ICONSTOP|MB_OK "파일 설치에 실패하여 원본을 복원했습니다. 기존 패치가 있었다면 안전을 위해 제거되었습니다. Dead Space가 실행 중인지 확인한 뒤 다시 설치하십시오." /SD IDOK
   Abort
 
 install_done:
@@ -265,6 +462,7 @@ SectionEnd
 
 Function un.RestoreInstalledFiles
   StrCpy $BackupDir "$INSTDIR\DS1K_Backup_v0.1"
+  StrCpy $RestoreFailed "0"
   IfFileExists "$BackupDir\text_assets\text_assets_global.str" 0 un_no_backup
   IfFileExists "$BackupDir\text_assets\text\D8CBB618.str" 0 un_no_backup
   ClearErrors
@@ -277,6 +475,7 @@ Function un.RestoreInstalledFiles
   !insertmacro RestoreRuntime "xinput1_3.dll" "xinput" "uninstall"
   !insertmacro RestoreRuntime "SDL3.dll" "sdl" "uninstall"
   !insertmacro RestoreRuntime "DeadSpaceFixes.ini" "config" "uninstall"
+  StrCmp $RestoreFailed "1" un_restore_error
   Return
 un_no_backup:
   MessageBox MB_ICONSTOP|MB_OK "원본 백업을 찾을 수 없어 제거할 수 없습니다.$\r$\n$BackupDir" /SD IDOK
@@ -288,7 +487,7 @@ FunctionEnd
 
 Section "Uninstall"
   Call un.RestoreInstalledFiles
-  DeleteRegKey HKLM "${UNINSTALL_KEY}"
+  DeleteRegKey ${PATCH_REG_ROOT} "${UNINSTALL_KEY}"
   RMDir /r "$INSTDIR\DS1K_Patch"
   MessageBox MB_ICONINFORMATION|MB_OK "한국어 개선 패치를 제거하고 원본 파일을 복원했습니다.$\r$\n$\r$\n백업 폴더는 안전을 위해 유지합니다:$\r$\n$INSTDIR\DS1K_Backup_v0.1" /SD IDOK
 SectionEnd
