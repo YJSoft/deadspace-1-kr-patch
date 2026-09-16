@@ -167,5 +167,6 @@ DeadSpace1-KR-0.1.exe
 
 설치 파일에는 DLL, 기본 설정, 문서, 라이선스와 VPatch 차등 데이터가 들어간다. 게임
 원본이나 완성된 STR는 포함하지 않으며, 사용자의 지원되는 Steam 원본 STR가 있어야
-설치를 완료할 수 있다. `main` 브랜치 최신 성공 artifact는 README의 nightly.link
-고정 주소로 받을 수 있다.
+설치를 완료할 수 있다. `main` 브랜치 최신 성공 artifact는 README의 GitHub Actions
+고정 주소에서 확인할 수 있다. nightly.link는 현재 `archive: false` 비압축 artifact를
+지원하지 않는다.
