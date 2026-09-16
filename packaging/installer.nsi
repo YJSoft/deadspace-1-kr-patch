@@ -53,7 +53,7 @@ VIAddVersionKey /LANG=1042 "LegalCopyright" "Third-party licenses are included w
 !define MUI_ICON "${NSISDIR}\Contrib\Graphics\Icons\orange-install.ico"
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\orange-uninstall.ico"
 !define MUI_WELCOMEPAGE_TITLE "Dead Space 1 한국어 개선 패치 ${PRODUCT_VERSION}"
-!define MUI_WELCOMEPAGE_TEXT "이 마법사는 Steam판 Dead Space (2008) 1.0.0.222에 한국어 개선 패치를 설치합니다.$\r$\n$\r$\n게임을 완전히 종료한 상태에서 계속하십시오. 정상적으로 설치된 원본 게임이 필요합니다."
+!define MUI_WELCOMEPAGE_TEXT "이 마법사는 Steam 또는 EA App판 Dead Space (2008)에 한국어 개선 패치를 설치합니다.$\r$\n$\r$\n게임을 완전히 종료한 상태에서 계속하십시오. 정상적으로 설치된 원본 게임이 필요합니다."
 !define MUI_DIRECTORYPAGE_TEXT_TOP "Dead Space.exe가 들어 있는 Dead Space (2008) 설치 폴더를 선택하십시오."
 !define MUI_FINISHPAGE_TITLE "설치 완료"
 !define MUI_FINISHPAGE_TEXT "한국어 개선 패치 설치가 완료되었습니다.$\r$\n$\r$\n원본 파일은 Dead Space 설치 폴더의 DS1K_Backup_v0.1에 보존됩니다."
@@ -164,13 +164,18 @@ try_vpatch_${TAG}_done:
 
 Function .onInit
   SetRegView 32
+  ReadRegStr $0 ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "InstallLocation"
+  IfFileExists "$0\Dead Space.exe" detected_dir
   ReadRegStr $0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 17470" "InstallLocation"
   ${If} $0 == ""
     ReadRegStr $0 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 17470" "InstallLocation"
   ${EndIf}
-  ${If} $0 != ""
-    StrCpy $INSTDIR $0
-  ${EndIf}
+  IfFileExists "$0\Dead Space.exe" detected_dir
+  ReadRegStr $0 HKLM "Software\Electronic Arts\Dead Space" "Install Dir"
+  IfFileExists "$0\Dead Space.exe" detected_dir
+  Return
+detected_dir:
+  StrCpy $INSTDIR $0
 FunctionEnd
 
 Function .onVerifyInstDir
@@ -451,7 +456,7 @@ patch_error:
   FileWrite $0 "patch_error: $PatchResult$\r$\nfont_source: $FontSource$\r$\ntext_source: $TextSource$\r$\n"
   FileClose $0
 !endif
-  MessageBox MB_ICONSTOP|MB_OK "게임 파일을 확인할 수 없어 설치를 중단했습니다.$\r$\n$\r$\nSteam판 Dead Space (2008) 1.0.0.222가 원본 상태로 설치되어 있어야 합니다. Steam에서 '설치된 파일 무결성 확인'을 실행한 뒤 다시 설치하십시오." /SD IDOK
+  MessageBox MB_ICONSTOP|MB_OK "게임 파일을 확인할 수 없어 설치를 중단했습니다.$\r$\n$\r$\n지원되는 Steam 또는 EA App판 Dead Space (2008)가 원본 상태로 설치되어 있어야 합니다. 사용 중인 게임 클라이언트에서 게임 파일을 복구한 뒤 다시 설치하십시오." /SD IDOK
   Abort
 
 upgrade_backup_error:
@@ -460,7 +465,7 @@ upgrade_backup_error:
   FileWrite $0 "upgrade_backup_error: $PatchResult$\r$\nexisting_build: $ExistingBuild$\r$\nnew_build: ${GIT_HASH}$\r$\nfont_source: $FontSource$\r$\ntext_source: $TextSource$\r$\n"
   FileClose $0
 !endif
-  MessageBox MB_ICONSTOP|MB_OK "기존 패치의 원본 백업이 없거나 손상되어 안전하게 업그레이드할 수 없습니다.$\r$\n$\r$\n게임 파일은 변경하지 않았습니다. Steam에서 Dead Space의 '설치된 파일 무결성 확인'을 실행해 원본 파일을 복원한 뒤 이 설치 파일을 다시 실행하십시오.$\r$\n$\r$\n다른 모드를 사용 중이면 먼저 별도로 백업하십시오." /SD IDOK
+  MessageBox MB_ICONSTOP|MB_OK "기존 패치의 원본 백업이 없거나 손상되어 안전하게 업그레이드할 수 없습니다.$\r$\n$\r$\n게임 파일은 변경하지 않았습니다. 사용 중인 게임 클라이언트에서 Dead Space 원본 파일을 복구한 뒤 이 설치 파일을 다시 실행하십시오.$\r$\n$\r$\n다른 모드를 사용 중이면 먼저 별도로 백업하십시오." /SD IDOK
   Abort
 
 snapshot_error:

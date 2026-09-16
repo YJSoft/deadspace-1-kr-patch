@@ -2,7 +2,7 @@
   "format": 2,
   "patch": {
     "file": "deadspace1-kr-v0.1.pat",
-    "sha256": "36C569199F1F65D3A77C590A165DDD95E28CB942633B93F49AC51369CB0F1345"
+    "sha256": "3663303FA7D335DC512C7B61EAA21E0500013AA06BC652C149C8D6BFF607842A"
   },
   "inputs": [
     {
@@ -14,6 +14,16 @@
       "file": "text_assets/text/12F4D5F8.str",
       "sha256": "5DA12D429E6918ADAA9F68381F27170F92C9236BF36D6D192B37D7CF641B0B47",
       "kind": "steam"
+    },
+    {
+      "file": "text_assets/text_assets_global.str",
+      "sha256": "B68298A64BFD0F173BE7DA0427874A15823C32BE446919FD9818FB1812A947A8",
+      "kind": "ea-app"
+    },
+    {
+      "file": "text_assets/text/D8CBB618.str",
+      "sha256": "C27FD36F4416AEF63E17DC3A5803BDB72418A702C277BF8BC31A26298C12BDF0",
+      "kind": "ea-app"
     },
     {
       "file": "text_assets/text_assets_global.str",

@@ -9,7 +9,7 @@
 - SDL 3.2.8 x86 개발 패키지
 - 폰트 DXT5 압축용 `squish64.dll`
 - Visceral STR를 풀고 다시 묶을 수 있는 Gibbed.Visceral 계열 도구
-- 합법적으로 설치된 Steam판 Dead Space (2008) 1.0.0.222
+- 합법적으로 설치된 Steam 및 EA App판 Dead Space (2008)
 - NSIS 3.12 (로컬 설치 파일 빌드 또는 VPatch 재생성 시)
 
 저장소에는 게임 파일, 중국어 패치 파일, SDL 바이너리, `squish64.dll`, Gibbed 도구를
@@ -123,10 +123,11 @@ generate-translations.cmd <original-lh2> <legacy-Launcher.xml> <output.csv>
 ## 7. 설치 마법사와 VPatch
 
 배포 설치 파일은 완성된 STR를 내장하지 않는다. `packaging/patches`의 VPatch 차등
-데이터를 사용해 설치 대상의 깨끗한 Steam 원본 STR에서 한국어 STR를 생성한다.
+데이터를 사용해 설치 대상의 깨끗한 Steam 또는 EA App 원본 STR에서 한국어 STR를
+생성한다.
 
-번역이나 글꼴이 바뀌어 새 STR를 만들었으면, 지원 원본 2개와 새 `dist` STR 2개를
-지정해 차등 데이터와 매니페스트를 갱신한다.
+번역이나 글꼴이 바뀌어 새 STR를 만들었으면, 지원하는 두 에디션의 원본과 새 `dist`
+STR 2개를 지정해 차등 데이터와 매니페스트를 갱신한다.
 
 ```powershell
 $nsisRoot = .\scripts\prepare-nsis.ps1
@@ -134,16 +135,19 @@ $nsisRoot = .\scripts\prepare-nsis.ps1
   -NsisRoot $nsisRoot `
   -OriginalTextAssets <원본-text_assets_global.str> `
   -OriginalLocalization <원본-12F4D5F8.str> `
+  -EaTextAssets <EA원본-text_assets_global.str> `
+  -EaLocalization <EA원본-D8CBB618.str> `
   -LegacyTextAssets <이전-설치판-기준-text_assets_global.str> `
   -LegacyLocalization <이전-설치판-기준-D8CBB618.str>
 ```
 
-현재 Steam 영어 설치본은 `12F4D5F8.str`를 포함하며, 설치기는 여기서 패치용
-`D8CBB618.str`를 새로 생성한다. `Legacy*` 입력은 이전 배포판에서 바로 업그레이드할
-수 있도록 함께 넣는 선택 호환 입력이며 두 파일을 한 쌍으로 지정한다.
+현재 Steam 설치본은 변환 입력으로 사용하는 `12F4D5F8.str`를 포함한다. EA App
+영어 설치본에는 `D8CBB618.str`가 이미 있으며 설치기는 이를 백업하고 한국어판으로
+교체한다. `Ea*`와 `Legacy*` 입력은 각각 두 파일을 한 쌍으로 지정한다. `Legacy*`는
+이전 배포판에서 바로 업그레이드하기 위한 선택 호환 입력이다.
 
-스크립트는 알려진 Steam 원본과 레거시 입력 SHA-256을 확인한 뒤 작업한다. 생성된
-`deadspace1-kr-v0.1.pat`와 `manifest.json`을 함께 커밋한다. 원본 또는 완성 STR는
+스크립트는 알려진 Steam·EA App 원본과 레거시 입력 SHA-256을 확인한 뒤 작업한다.
+생성된 `deadspace1-kr-v0.1.pat`와 `manifest.json`을 함께 커밋한다. 원본 또는 완성 STR는
 커밋하지 않는다.
 
 DLL과 배포 파일을 `dist`에 준비한 뒤 설치 마법사를 로컬에서 빌드할 수 있다.
@@ -155,7 +159,7 @@ $nsisRoot = .\scripts\prepare-nsis.ps1
 ```
 
 출력 파일명은 `DeadSpace1-KR-0.1.exe`다. 새 설치기는 깨끗한 임시 게임 폴더에서
-최초 설치, 기존판 업그레이드, 설정 보존, 백업 손실 시 무변경 중단, Steam 원본 복원
+최초 설치, 기존판 업그레이드, 설정 보존, 백업 손실 시 무변경 중단, 원본 복원
 후 백업 재구성, 제거 및 원본 해시 복원을 모두 확인한다.
 
 ## 8. GitHub Actions 빌드
@@ -173,8 +177,8 @@ DeadSpace1-KR-0.1.exe
 ```
 
 설치 파일에는 DLL, 기본 설정, 문서, 라이선스와 VPatch 차등 데이터가 들어간다. 게임
-원본이나 완성된 STR는 포함하지 않으며, 사용자의 지원되는 Steam 원본 STR가 있어야
-설치를 완료할 수 있다. `main` 브랜치 push 빌드가 성공하면 CI는 `nightly`
+원본이나 완성된 STR는 포함하지 않으며, 사용자의 지원되는 Steam 또는 EA App 원본
+STR가 있어야 설치를 완료할 수 있다. `main` 브랜치 push 빌드가 성공하면 CI는 `nightly`
 프리릴리스의 `DeadSpace1-KR-0.1.exe` 자산도 같은 파일로 교체한다. README의 고정
 주소는 이 릴리스 자산을 가리킨다. nightly.link는 현재 `archive: false` 비압축
 artifact를 지원하지 않는다.

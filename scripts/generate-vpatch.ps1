@@ -5,6 +5,8 @@ param(
     [string]$OriginalTextAssets,
     [Parameter(Mandatory = $true)]
     [string]$OriginalLocalization,
+    [string]$EaTextAssets,
+    [string]$EaLocalization,
     [string]$LegacyTextAssets,
     [string]$LegacyLocalization,
     [string]$TargetTextAssets,
@@ -42,6 +44,29 @@ $sources = @(
         Kind = "steam"
     }
 )
+
+if ([string]::IsNullOrWhiteSpace($EaTextAssets) -xor
+    [string]::IsNullOrWhiteSpace($EaLocalization)) {
+    throw "EaTextAssets and EaLocalization must be supplied together."
+}
+if (-not [string]::IsNullOrWhiteSpace($EaTextAssets)) {
+    $sources += @(
+        [ordered]@{
+            Path = $EaTextAssets
+            ExpectedHash = "B68298A64BFD0F173BE7DA0427874A15823C32BE446919FD9818FB1812A947A8"
+            File = "text_assets/text_assets_global.str"
+            Target = $TargetTextAssets
+            Kind = "ea-app"
+        },
+        [ordered]@{
+            Path = $EaLocalization
+            ExpectedHash = "C27FD36F4416AEF63E17DC3A5803BDB72418A702C277BF8BC31A26298C12BDF0"
+            File = "text_assets/text/D8CBB618.str"
+            Target = $TargetLocalization
+            Kind = "ea-app"
+        }
+    )
+}
 
 if ([string]::IsNullOrWhiteSpace($LegacyTextAssets) -xor
     [string]::IsNullOrWhiteSpace($LegacyLocalization)) {
