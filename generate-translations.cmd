@@ -9,5 +9,5 @@ if "%~3"=="" (
 call "%~dp0build-assets.cmd"
 if errorlevel 1 exit /b %errorlevel%
 
-"%TEMP%\ds1k-prototype-assets\GenerateTranslationCsv.exe" "%~1" "%~2" "%~3"
+"%TEMP%\deadspace-1-kr-patch-assets\GenerateTranslationCsv.exe" "%~1" "%~2" "%~3"
 exit /b %errorlevel%

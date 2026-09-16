@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Prepare verified SDL3 x86 files
         shell: pwsh
@@ -33,10 +33,27 @@ jobs:
         shell: pwsh
         run: .\scripts\stage-dist.ps1
 
-      - name: Upload dist artifact
-        uses: actions/upload-artifact@v4
+      - name: Set installer version
+        id: version
+        shell: pwsh
+        run: |
+          $shortSha = "${{ github.sha }}".Substring(0, 8)
+          "short_sha=$shortSha" >> $env:GITHUB_OUTPUT
+
+      - name: Prepare verified NSIS
+        shell: pwsh
+        run: |
+          $nsisRoot = .\scripts\prepare-nsis.ps1
+          "NSIS_ROOT=$nsisRoot" >> $env:GITHUB_ENV
+
+      - name: Build NSIS installer
+        shell: pwsh
+        run: .\scripts\build-installer.ps1 -NsisRoot $env:NSIS_ROOT -GitHash "${{ steps.version.outputs.short_sha }}"
+
+      - name: Upload standalone installer
+        uses: actions/upload-artifact@v7
         with:
-          name: dead-space-kr-dist-${{ github.sha }}
-          path: dist/
+          path: dist/DeadSpace1-KR-0.1.exe
           if-no-files-found: error
           retention-days: 30
+          archive: false

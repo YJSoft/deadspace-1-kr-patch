@@ -5,7 +5,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $dist = Join-Path $repoRoot "dist"
 $licenses = Join-Path $dist "licenses"
 $developerTools = Join-Path $dist "developer-tools"
-$assetBuild = Join-Path ([System.IO.Path]::GetTempPath()) "ds1k-prototype-assets"
+$assetBuild = Join-Path ([System.IO.Path]::GetTempPath()) "deadspace-1-kr-patch-assets"
 
 if (-not (Test-Path -LiteralPath (Join-Path $dist "ds1k_utf8.dll")) -or
     -not (Test-Path -LiteralPath (Join-Path $dist "xinput1_3.dll")) -or

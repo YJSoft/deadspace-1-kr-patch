@@ -11,3 +11,8 @@ The complete applicable license notices are included under third_party:
 - licenses/MinHook-BSD-2-Clause.txt
 - licenses/SDL3-zlib.txt
 - NanumBarunGothic/OFL-1.1.txt
+- licenses/NSIS-COPYING.txt
+- licenses/VPatch-zlib.txt
+
+The Windows installer is built with NSIS and uses the bundled VPatch plug-in
+to generate patched STR files from a user's supported original game files.

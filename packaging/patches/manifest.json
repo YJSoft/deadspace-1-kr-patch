@@ -1,0 +1,27 @@
+﻿{
+    "format":  1,
+    "patch":  {
+                  "file":  "deadspace1-kr-v0.1.pat",
+                  "sha256":  "5F4219CD3AF694F9EC8737E559E37B03051529645DC4E16C2878A06220F5A29A"
+              },
+    "inputs":  [
+                   {
+                       "file":  "text_assets/text_assets_global.str",
+                       "sha256":  "CCB906F6AC651E0E1C3E85E247C94CA11D96CA03F1B53A88B6EF679C2A32F3E1"
+                   },
+                   {
+                       "file":  "text_assets/text/D8CBB618.str",
+                       "sha256":  "30159AA3748058AC639839DEFB9CC233DBE7158CA0B09538CDC5DBC27BABE0BC"
+                   }
+               ],
+    "outputs":  [
+                    {
+                        "file":  "text_assets/text_assets_global.str",
+                        "sha256":  "E87A4FC56065326E12B5688DDE1529115183AE2EA8BF022341FB72ED5BD2EDF8"
+                    },
+                    {
+                        "file":  "text_assets/text/D8CBB618.str",
+                        "sha256":  "06ECCAAFDE78A735C0BB299F422441CFAEC15D4EC7EFA22BB572FD7AE0829FC4"
+                    }
+                ]
+}

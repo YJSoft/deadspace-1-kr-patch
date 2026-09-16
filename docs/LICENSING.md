@@ -9,6 +9,8 @@
 - MinHook: BSD 2-Clause
 - SDL3: zlib License
 - NanumBarunGothic: SIL Open Font License 1.1
+- NSIS 3.12: zlib/libpng 계열 및 포함 구성 요소별 라이선스
+- VPatch: zlib License
 
 전문은 `third_party/` 아래에 보존한다. 배포 바이너리를 만들 때도 해당 고지와 전문을
 함께 제공해야 한다.
@@ -30,6 +32,6 @@ UTF-8 훅·도구·번역 전체에 자동 확장된다고 가정해서는 안 �
 
 ## 포함하지 않는 자료
 
-원본 게임 EXE/STR/LH2, 다른 언어 패치의 실행 파일과 리소스, 생성된 DLL/STR는 소스
-저장소에 포함하지 않는다. 사용자는 정당하게 보유한 게임 설치에서 로컬로 입력 파일을
-준비해야 한다.
+원본 게임 EXE/STR/LH2, 다른 언어 패치의 실행 파일과 리소스, 생성된 DLL/완성 STR는
+소스 저장소에 포함하지 않는다. 원본에서 완성 STR로 변환하기 위한 VPatch 차등 데이터는
+포함한다. 사용자는 정당하게 보유한 지원 게임 설치의 원본 파일로 설치해야 한다.

@@ -4,7 +4,7 @@ setlocal
 call "%~dp0tools\vsdevcmd.cmd" x86
 if errorlevel 1 exit /b %errorlevel%
 
-set "BUILD_ROOT=%TEMP%\ds1k-prototype-build"
+set "BUILD_ROOT=%TEMP%\deadspace-1-kr-patch-native"
 if not exist "%BUILD_ROOT%" mkdir "%BUILD_ROOT%"
 if not exist "%BUILD_ROOT%\obj" mkdir "%BUILD_ROOT%\obj"
 if not exist "%~dp0dist" mkdir "%~dp0dist"

@@ -8,9 +8,18 @@
 *.vcxproj text eol=crlf
 *.filters text eol=crlf
 *.cmd text eol=crlf
+*.nsi text eol=crlf
+*.ps1 text eol=crlf
 *.ini text eol=crlf
 *.txt text eol=crlf
 *.csv text eol=crlf
 *.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
 
 *.ttf binary
+*.pat binary
+
+# Preserve upstream license text even where the original carries trailing spaces.
+third_party/licenses/NSIS-COPYING.txt whitespace=-trailing-space

@@ -44,6 +44,7 @@ Launcher.xml
 *.log
 DS1K/
 DS1K_Backup_PreInstall/
+DS1K_Backup_v0.1/
 
 # Local editor / OS files
 .idea/

@@ -10,6 +10,7 @@
 - 폰트 DXT5 압축용 `squish64.dll`
 - Visceral STR를 풀고 다시 묶을 수 있는 Gibbed.Visceral 계열 도구
 - 합법적으로 설치된 Steam판 Dead Space (2008) 1.0.0.222
+- NSIS 3.12 (로컬 설치 파일 빌드 또는 VPatch 재생성 시)
 
 저장소에는 게임 파일, 중국어 패치 파일, SDL 바이너리, `squish64.dll`, Gibbed 도구를
 포함하지 않는다.
@@ -41,7 +42,7 @@ build.cmd
 2. 수정된 DeadSpace2008Fixes를 Win32 `xinput1_3.dll`로 빌드한다.
 3. SDL3 런타임을 함께 `dist/`로 복사한다.
 
-중간 파일은 `%TEMP%\ds1k-prototype-build`와 `%TEMP%\ds1k-fixes-build`에 생성된다.
+중간 파일은 `%TEMP%\deadspace-1-kr-patch-native`와 `%TEMP%\ds1k-fixes-build`에 생성된다.
 최종 `dist/`도 Git 추적 대상이 아니다.
 
 배치 파일은 Visual Studio Installer의 `vswhere.exe`로 최신 설치를 찾으므로 Community,
@@ -53,7 +54,7 @@ Professional, Enterprise와 기본 경로가 아닌 설치를 모두 지원한�
 build-assets.cmd
 ```
 
-다음 파일이 `%TEMP%\ds1k-prototype-assets`에 생성된다.
+다음 파일이 `%TEMP%\deadspace-1-kr-patch-assets`에 생성된다.
 
 - `BuildPocAssets.exe`: 번역 LCH2와 세 UI 폰트 아틀라스 생성
 - `GenerateTranslationCsv.exe`: 원본 LH2와 과거 `Launcher.xml`에서 CSV 생성
@@ -80,7 +81,7 @@ tg4d/0007_eurostileltstdbold32.tg4d
 실행 형식:
 
 ```bat
-%TEMP%\ds1k-prototype-assets\BuildPocAssets.exe ^
+%TEMP%\deadspace-1-kr-patch-assets\BuildPocAssets.exe ^
   translations\dead_space_ko.csv ^
   <writable-extended-font-unpacked-dir> ^
   <steam-font-unpacked-dir> ^
@@ -119,17 +120,52 @@ generate-translations.cmd <original-lh2> <legacy-Launcher.xml> <output.csv>
 전각 공백과 탭을 ASCII 공백으로 정규화하며, 의미 없는 항목을 제외한다. 재생성 결과로
 현재 검수 CSV를 무조건 덮어쓰지 말고 ID별 diff를 검토한다.
 
-## 7. GitHub Actions 빌드
+## 7. 설치 마법사와 VPatch
+
+배포 설치 파일은 완성된 STR를 내장하지 않는다. `packaging/patches`의 VPatch 차등
+데이터를 사용해 설치 대상의 깨끗한 Steam 원본 STR에서 한국어 STR를 생성한다.
+
+번역이나 글꼴이 바뀌어 새 STR를 만들었으면, 지원 원본 2개와 새 `dist` STR 2개를
+지정해 차등 데이터와 매니페스트를 갱신한다.
+
+```powershell
+$nsisRoot = .\scripts\prepare-nsis.ps1
+.\scripts\generate-vpatch.ps1 `
+  -NsisRoot $nsisRoot `
+  -OriginalTextAssets <원본-text_assets_global.str> `
+  -OriginalLocalization <원본-D8CBB618.str>
+```
+
+스크립트는 알려진 Steam 원본 SHA-256을 확인한 뒤 작업한다. 생성된
+`deadspace1-kr-v0.1.pat`와 `manifest.json`을 함께 커밋한다. 원본 또는 완성 STR는
+커밋하지 않는다.
+
+DLL과 배포 파일을 `dist`에 준비한 뒤 설치 마법사를 로컬에서 빌드할 수 있다.
+
+```powershell
+.\scripts\stage-dist.ps1
+$nsisRoot = .\scripts\prepare-nsis.ps1
+.\scripts\build-installer.ps1 -NsisRoot $nsisRoot
+```
+
+출력 파일명은 `DeadSpace1-KR-0.1.exe`다. 새 설치기는 깨끗한 임시 게임 폴더에서
+최초 설치, 재설치, 제거 및 원본 해시 복원을 모두 확인한다.
+
+## 8. GitHub Actions 빌드
 
 `.github/workflows/build-dist.yml`은 저장소에 push된 모든 커밋과 pull request에서
 Windows Server 2022 빌드를 수행한다. SDL 3.2.8 공식 Visual C++ 개발 패키지는 고정된
 URL과 SHA-256으로 검증한 뒤 사용한다.
 
-완료된 `dead-space-kr-dist-<commit>` artifact에는 다음 파일이 들어간다.
+CI는 고정 URL과 SHA-256으로 NSIS 3.12도 검증해 준비한 뒤 설치 마법사를 만든다.
+결과는 `actions/upload-artifact@v7`의 단일 파일 모드(`archive: false`)로 업로드하므로
+artifact 자체가 ZIP이 아닌 다음 실행 파일 하나다.
 
-- `ds1k_utf8.dll`, `xinput1_3.dll`, `SDL3.dll`
-- `DeadSpaceFixes.ini`, 설치·설정 안내, 제3자 라이선스
-- C# 자산 생성기 2종과 `SHA256SUMS.txt`
+```text
+DeadSpace1-KR-0.1.exe
+```
 
-게임 원본과 확장 폰트 작업본이 필요한 STR는 CI에서 만들 수 없으므로 artifact에
-포함하지 않는다. CI artifact만으로는 완성 패치를 설치할 수 없다.
+설치 파일에는 DLL, 기본 설정, 문서, 라이선스와 VPatch 차등 데이터가 들어간다. 게임
+원본이나 완성된 STR는 포함하지 않으며, 사용자의 지원되는 Steam 원본 STR가 있어야
+설치를 완료할 수 있다. `main` 브랜치 최신 성공 artifact는 README의 nightly.link
+고정 주소로 받을 수 있다.

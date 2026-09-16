@@ -4,8 +4,9 @@ Steam판 **Dead Space (2008) 1.0.0.222**의 실행 파일을 교체하지 않고
 표시, ID 기반 번역, 통합 글꼴, 자동 자막 배율 및 여러 원작 버그 수정을 적용하는
 프로젝트다.
 
-이 저장소는 소스 공개본이다. 빌드된 DLL, 게임 리소스 STR, 배포 ZIP, 원본 게임 파일과
-다른 언어 패치 파일은 포함하지 않는다.
+이 저장소는 소스 공개본이다. 빌드된 DLL, 완성된 게임 리소스 STR, 원본 게임 파일과
+다른 언어 패치 파일은 포함하지 않는다. 배포 설치기는 사용자가 보유한 Steam 원본
+STR에 저장소의 VPatch 차등 데이터를 적용해 한국어 STR를 설치 시점에 생성한다.
 
 ## 현재 상태
 
@@ -36,7 +37,7 @@ Steam판 **Dead Space (2008) 1.0.0.222**의 실행 파일을 교체하지 않고
 | `translations/` | 현재 번역과 초기 가져오기 스냅샷 |
 | `assets/fonts/` | 글꼴 자산 생성에 사용하는 나눔바른고딕 원본 입력 파일 |
 | `config/` | `DeadSpaceFixes.ini` 설정 예제 |
-| `packaging/` | 향후 배포 패키지용 설치·제거 스크립트 원본 |
+| `packaging/` | NSIS 설치 마법사와 원본 STR용 VPatch 차등 데이터 |
 | `docs/` | 빌드, 구조, 유지보수, 테스트 및 설치 설명 |
 
 ## 문서
@@ -63,8 +64,17 @@ build-assets.cmd
 `dist/`에 모은다. `dist/`는 빌드 산출물이므로 Git에서 제외된다.
 
 GitHub Actions도 push된 모든 커밋과 pull request를 Windows 환경에서 빌드하고
-`dead-space-kr-dist-<commit>` artifact를 업로드한다. 이 artifact에는 게임 원본에서
-파생되는 STR가 포함되지 않으므로 테스트 설치에는 로컬에서 생성한 STR가 별도로 필요하다.
+`DeadSpace1-KR-0.1.exe` 한 파일을 artifact로 업로드한다. 설치기는 경로 선택과 원본
+검증을 거치는 마법사 방식이며, 원본 STR를 백업한 뒤 한국어 STR를 즉석 생성한다.
+
+`main` 브랜치 최신 성공 빌드는 다음 고정 주소에서 받을 수 있다.
+
+https://nightly.link/YJSoft/deadspace-1-kr-patch/workflows/build-dist/main/DeadSpace1-KR-0.1.exe
+
+과거 게임 폴더 안에서 사용하던 `ds1k-prototype` 작업 디렉터리는 현재 빌드나 설치에
+참조되지 않는다. 순정 게임에 CI 설치 파일을 시험할 때는 이 저장소와 설치 EXE만 있으면
+된다. 단, 번역·폰트 변경 후 VPatch를 다시 만들 때는 합법적으로 보유한 원본 STR와
+`docs/BUILD.md`에 적힌 외부 리소스 도구가 별도로 필요하다.
 
 폰트와 번역 STR 생성에는 소유 중인 원본 게임 리소스, 확장 FFN 테이블을 가진 작업용
 폰트 리소스, Gibbed.Visceral 계열 unpack/pack 도구와 `squish64.dll`이 별도로

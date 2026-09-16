@@ -4,7 +4,7 @@ setlocal
 call "%~dp0tools\vsdevcmd.cmd" x64
 if errorlevel 1 exit /b %errorlevel%
 
-set "ASSET_BUILD=%TEMP%\ds1k-prototype-assets"
+set "ASSET_BUILD=%TEMP%\deadspace-1-kr-patch-assets"
 if not exist "%ASSET_BUILD%" mkdir "%ASSET_BUILD%"
 
 csc.exe /nologo /optimize+ /platform:x64 /target:exe ^
