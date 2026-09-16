@@ -181,7 +181,6 @@ Function .onVerifyInstDir
 valid_dir:
   Return
 invalid_dir:
-  MessageBox MB_ICONEXCLAMATION|MB_OK "올바른 Dead Space (2008) 설치 폴더를 선택하십시오.$\r$\n$\r$\nSteam에서 설치한 게임이 완전한 원본 상태인지도 확인해 주십시오." /SD IDOK
   Abort
 FunctionEnd
 
