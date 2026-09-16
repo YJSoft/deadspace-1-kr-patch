@@ -67,13 +67,14 @@ GitHub Actions도 push된 모든 커밋과 pull request를 Windows 환경에서 
 `DeadSpace1-KR-0.1.exe` 한 파일을 artifact로 업로드한다. 설치기는 경로 선택과 원본
 검증을 거치는 마법사 방식이며, 원본 STR를 백업한 뒤 한국어 STR를 즉석 생성한다.
 
-`main` 브랜치 최신 성공 빌드와 `DeadSpace1-KR-0.1.exe` artifact는 다음 고정 주소에서
-확인할 수 있다.
+`main` 브랜치 최신 성공 설치 파일은 다음 고정 주소에서 바로 받을 수 있다. CI가
+성공할 때마다 `nightly` 프리릴리스의 같은 이름 자산을 교체한다.
 
-https://github.com/YJSoft/deadspace-1-kr-patch/actions/workflows/build-dist.yml?query=branch%3Amain+is%3Asuccess
+https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.1.exe
 
-현재 nightly.link는 `archive: false`로 업로드한 비압축 artifact를 지원하지 않는다.
-ZIP 없는 단일 EXE 배포를 유지하기 위해 nightly.link 주소는 제공하지 않는다.
+GitHub Actions의 실행별 artifact도 ZIP 없는 단일 EXE로 유지한다. nightly.link는 현재
+`archive: false` 비압축 artifact를 지원하지 않으므로 고정 링크는 GitHub Release
+자산을 사용한다.
 
 과거 게임 폴더 안에서 사용하던 `ds1k-prototype` 작업 디렉터리는 현재 빌드나 설치에
 참조되지 않는다. 순정 게임에 CI 설치 파일을 시험할 때는 이 저장소와 설치 EXE만 있으면
