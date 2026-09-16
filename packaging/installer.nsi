@@ -23,6 +23,8 @@ SetCompressorDictSize 32
 !define PRODUCT_PUBLISHER "YJSoft"
 !define REPO_ROOT "${__FILEDIR__}\.."
 !define PATCH_FILE "${REPO_ROOT}\packaging\patches\deadspace1-kr-v0.1.pat"
+!define STEAM_LOCALIZATION_FILE "12F4D5F8.str"
+!define PATCH_LOCALIZATION_FILE "D8CBB618.str"
 !ifdef TEST_BUILD
   !define PATCH_REG_ROOT HKCU
   !define UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\DeadSpace1KR-Test"
@@ -51,8 +53,8 @@ VIAddVersionKey /LANG=1042 "LegalCopyright" "Third-party licenses are included w
 !define MUI_ICON "${NSISDIR}\Contrib\Graphics\Icons\orange-install.ico"
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\orange-uninstall.ico"
 !define MUI_WELCOMEPAGE_TITLE "Dead Space 1 한국어 개선 패치 ${PRODUCT_VERSION}"
-!define MUI_WELCOMEPAGE_TEXT "이 마법사는 Steam판 Dead Space (2008) 1.0.0.222에 한국어 개선 패치를 설치합니다.$\r$\n$\r$\n원본 STR는 설치 폴더에서 직접 읽어 백업한 뒤 한국어 STR로 변환합니다. 게임을 종료한 상태에서 계속하십시오."
-!define MUI_DIRECTORYPAGE_TEXT_TOP "Dead Space.exe가 들어 있는 Dead Space (2008) 설치 폴더를 선택하십시오. 원본 STR가 맞지 않으면 설치하지 않습니다."
+!define MUI_WELCOMEPAGE_TEXT "이 마법사는 Steam판 Dead Space (2008) 1.0.0.222에 한국어 개선 패치를 설치합니다.$\r$\n$\r$\n게임을 완전히 종료한 상태에서 계속하십시오. 정상적으로 설치된 원본 게임이 필요합니다."
+!define MUI_DIRECTORYPAGE_TEXT_TOP "Dead Space.exe가 들어 있는 Dead Space (2008) 설치 폴더를 선택하십시오."
 !define MUI_FINISHPAGE_TITLE "설치 완료"
 !define MUI_FINISHPAGE_TEXT "한국어 개선 패치 설치가 완료되었습니다.$\r$\n$\r$\n원본 파일은 Dead Space 설치 폴더의 DS1K_Backup_v0.1에 보존됩니다."
 
@@ -78,6 +80,7 @@ Var FontPatchOk
 Var TextPatchOk
 Var RestoreFailed
 Var InstallStage
+Var TextOriginalAbsent
 
 !macro BackupRuntime FILE TAG
   IfFileExists "$BackupDir\runtime\${FILE}" backup_${TAG}_done
@@ -130,6 +133,23 @@ check_runtime_${TAG}_done:
 repair_runtime_${TAG}_done:
 !macroend
 
+!macro BackupLocalization TAG
+  Delete "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}"
+  Delete "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}.absent"
+  StrCmp $TextOriginalAbsent "1" backup_localization_${TAG}_absent
+  ClearErrors
+  CopyFiles /SILENT "$INSTDIR\text_assets\text\${PATCH_LOCALIZATION_FILE}" "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}"
+  IfErrors backup_error
+  Goto backup_localization_${TAG}_done
+backup_localization_${TAG}_absent:
+  ClearErrors
+  FileOpen $0 "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}.absent" w
+  IfErrors backup_error
+  FileWrite $0 "absent$\r$\n"
+  FileClose $0
+backup_localization_${TAG}_done:
+!macroend
+
 !macro TryVpatch SOURCE OUTPUT FLAG TAG
   StrCpy ${FLAG} "0"
   Delete "${OUTPUT}"
@@ -156,9 +176,12 @@ FunctionEnd
 Function .onVerifyInstDir
   IfFileExists "$INSTDIR\Dead Space.exe" 0 invalid_dir
   IfFileExists "$INSTDIR\text_assets\text_assets_global.str" 0 invalid_dir
-  IfFileExists "$INSTDIR\text_assets\text\D8CBB618.str" 0 invalid_dir
+  IfFileExists "$INSTDIR\text_assets\text\${STEAM_LOCALIZATION_FILE}" valid_dir
+  IfFileExists "$INSTDIR\text_assets\text\${PATCH_LOCALIZATION_FILE}" 0 invalid_dir
+valid_dir:
   Return
 invalid_dir:
+  MessageBox MB_ICONEXCLAMATION|MB_OK "올바른 Dead Space (2008) 설치 폴더를 선택하십시오.$\r$\n$\r$\nSteam에서 설치한 게임이 완전한 원본 상태인지도 확인해 주십시오." /SD IDOK
   Abort
 FunctionEnd
 
@@ -179,9 +202,16 @@ Function RestoreInstalledFiles
   IfErrors 0 +2
   StrCpy $RestoreFailed "1"
 restore_installed_font_done:
-  IfFileExists "$BackupDir\text_assets\text\D8CBB618.str" 0 restore_installed_text_done
+  IfFileExists "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}" 0 restore_installed_text_absent
   ClearErrors
-  CopyFiles /SILENT "$BackupDir\text_assets\text\D8CBB618.str" "$INSTDIR\text_assets\text\D8CBB618.str"
+  CopyFiles /SILENT "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}" "$INSTDIR\text_assets\text\${PATCH_LOCALIZATION_FILE}"
+  IfErrors 0 +2
+  StrCpy $RestoreFailed "1"
+  Goto restore_installed_text_done
+restore_installed_text_absent:
+  IfFileExists "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}.absent" 0 restore_installed_text_done
+  ClearErrors
+  Delete "$INSTDIR\text_assets\text\${PATCH_LOCALIZATION_FILE}"
   IfErrors 0 +2
   StrCpy $RestoreFailed "1"
 restore_installed_text_done:
@@ -196,7 +226,12 @@ Section "한국어 개선 패치" SecMain
   StrCpy $InstallStage "초기화"
   StrCpy $BackupDir "$INSTDIR\DS1K_Backup_v0.1"
   StrCpy $FontSource "$INSTDIR\text_assets\text_assets_global.str"
-  StrCpy $TextSource "$INSTDIR\text_assets\text\D8CBB618.str"
+  StrCpy $TextSource "$INSTDIR\text_assets\text\${PATCH_LOCALIZATION_FILE}"
+  StrCpy $TextOriginalAbsent "0"
+  IfFileExists "$TextSource" initial_text_source_ready
+  StrCpy $TextSource "$INSTDIR\text_assets\text\${STEAM_LOCALIZATION_FILE}"
+  StrCpy $TextOriginalAbsent "1"
+initial_text_source_ready:
   StrCpy $UpgradeDetected "0"
   StrCpy $ExistingBuild ""
   StrCpy $BackupRecoveryNeeded "0"
@@ -215,23 +250,38 @@ upgrade_detection_done:
   DetailPrint "기존 한국어 패치 설치를 발견했습니다: $ExistingBuild"
 
   IfFileExists "$BackupDir\text_assets\text_assets_global.str" 0 upgrade_backup_incomplete
-  IfFileExists "$BackupDir\text_assets\text\D8CBB618.str" 0 upgrade_backup_incomplete
+  StrCpy $FontSource "$BackupDir\text_assets\text_assets_global.str"
+  IfFileExists "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}" upgrade_text_backup_present
+  IfFileExists "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}.absent" 0 upgrade_backup_incomplete
+  IfFileExists "$INSTDIR\text_assets\text\${STEAM_LOCALIZATION_FILE}" 0 upgrade_backup_incomplete
+  StrCpy $TextSource "$INSTDIR\text_assets\text\${STEAM_LOCALIZATION_FILE}"
+  StrCpy $TextOriginalAbsent "1"
+  Goto upgrade_text_source_ready
+upgrade_text_backup_present:
+  StrCpy $TextSource "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}"
+  StrCpy $TextOriginalAbsent "0"
+upgrade_text_source_ready:
   !insertmacro CheckRuntimeBackup "ds1k_utf8.dll" "ds1k"
   !insertmacro CheckRuntimeBackup "xinput1_3.dll" "xinput"
   !insertmacro CheckRuntimeBackup "SDL3.dll" "sdl"
   !insertmacro CheckRuntimeBackup "DeadSpaceFixes.ini" "config"
   StrCmp $BackupRecoveryNeeded "1" upgrade_backup_incomplete
-  StrCpy $FontSource "$BackupDir\text_assets\text_assets_global.str"
-  StrCpy $TextSource "$BackupDir\text_assets\text\D8CBB618.str"
   Goto upgrade_sources_ready
 
 upgrade_backup_incomplete:
   StrCpy $BackupRecoveryNeeded "1"
-  DetailPrint "기존 원본 백업이 불완전합니다. 현재 Steam 파일을 검사합니다."
+  StrCpy $FontSource "$INSTDIR\text_assets\text_assets_global.str"
+  StrCpy $TextOriginalAbsent "1"
+  StrCpy $TextSource "$INSTDIR\text_assets\text\${STEAM_LOCALIZATION_FILE}"
+  IfFileExists "$TextSource" upgrade_live_sources_ready
+  StrCpy $TextOriginalAbsent "0"
+  StrCpy $TextSource "$INSTDIR\text_assets\text\${PATCH_LOCALIZATION_FILE}"
+upgrade_live_sources_ready:
+  DetailPrint "기존 설치 정보를 확인하는 중..."
 
 upgrade_sources_ready:
 
-  DetailPrint "Steam 원본 STR를 검증하고 한국어 STR를 생성하는 중..."
+  DetailPrint "게임 파일을 확인하고 설치를 준비하는 중..."
   InitPluginsDir
   StrCmp $UpgradeDetected "1" 0 config_snapshot_done
   IfFileExists "$INSTDIR\DeadSpaceFixes.ini" 0 config_snapshot_done
@@ -246,7 +296,7 @@ config_snapshot_done:
 patch_attempt:
   !insertmacro TryVpatch "$FontSource" "$PLUGINSDIR\text_assets_global.str" "$FontPatchOk" "font_source"
   StrCmp $FontPatchOk "1" 0 patch_attempt_failed
-  !insertmacro TryVpatch "$TextSource" "$PLUGINSDIR\D8CBB618.str" "$TextPatchOk" "text_source"
+  !insertmacro TryVpatch "$TextSource" "$PLUGINSDIR\${PATCH_LOCALIZATION_FILE}" "$TextPatchOk" "text_source"
   StrCmp $TextPatchOk "1" patch_ready
 
 patch_attempt_failed:
@@ -254,12 +304,17 @@ patch_attempt_failed:
   StrCmp $BackupRecoveryNeeded "1" upgrade_backup_error
   StrCpy $BackupRecoveryNeeded "1"
   StrCpy $FontSource "$INSTDIR\text_assets\text_assets_global.str"
-  StrCpy $TextSource "$INSTDIR\text_assets\text\D8CBB618.str"
-  DetailPrint "원본 백업 검증에 실패했습니다. 현재 Steam 파일로 복구를 시도합니다."
+  StrCpy $TextOriginalAbsent "1"
+  StrCpy $TextSource "$INSTDIR\text_assets\text\${STEAM_LOCALIZATION_FILE}"
+  IfFileExists "$TextSource" retry_live_sources_ready
+  StrCpy $TextOriginalAbsent "0"
+  StrCpy $TextSource "$INSTDIR\text_assets\text\${PATCH_LOCALIZATION_FILE}"
+retry_live_sources_ready:
+  DetailPrint "현재 게임 파일로 설치를 다시 준비하는 중..."
   Goto patch_attempt
 
 patch_ready:
-  DetailPrint "두 STR의 생성과 검증이 완료되었습니다."
+  DetailPrint "설치 준비가 완료되었습니다."
 
   DetailPrint "원본 파일을 백업하는 중..."
   CreateDirectory "$BackupDir\text_assets\text"
@@ -269,9 +324,7 @@ patch_ready:
   ClearErrors
   CopyFiles /SILENT "$INSTDIR\text_assets\text_assets_global.str" "$BackupDir\text_assets\text_assets_global.str"
   IfErrors backup_error
-  ClearErrors
-  CopyFiles /SILENT "$INSTDIR\text_assets\text\D8CBB618.str" "$BackupDir\text_assets\text\D8CBB618.str"
-  IfErrors backup_error
+  !insertmacro BackupLocalization "fresh"
   !insertmacro BackupRuntime "ds1k_utf8.dll" "ds1k"
   !insertmacro BackupRuntime "xinput1_3.dll" "xinput"
   !insertmacro BackupRuntime "SDL3.dll" "sdl"
@@ -280,7 +333,7 @@ patch_ready:
 
 upgrade_prepare:
   StrCmp $BackupRecoveryNeeded "1" upgrade_recovery_prepare
-  DetailPrint "백업한 원본 파일로 기존 패치를 복원하는 중..."
+  DetailPrint "기존 패치를 정리하는 중..."
   Call RestoreInstalledFiles
   StrCmp $RestoreFailed "1" upgrade_restore_error
   IfFileExists "$PLUGINSDIR\previous-DeadSpaceFixes.ini" 0 originals_ready
@@ -290,13 +343,11 @@ upgrade_prepare:
   Goto originals_ready
 
 upgrade_recovery_prepare:
-  DetailPrint "Steam에서 복원한 원본 파일로 백업을 재구성하는 중..."
+  DetailPrint "원본 파일 백업을 다시 준비하는 중..."
   ClearErrors
   CopyFiles /SILENT "$INSTDIR\text_assets\text_assets_global.str" "$BackupDir\text_assets\text_assets_global.str"
   IfErrors backup_error
-  ClearErrors
-  CopyFiles /SILENT "$INSTDIR\text_assets\text\D8CBB618.str" "$BackupDir\text_assets\text\D8CBB618.str"
-  IfErrors backup_error
+  !insertmacro BackupLocalization "recovery"
   !insertmacro RepairRuntimeBackup "ds1k_utf8.dll" "ds1k"
   !insertmacro RepairRuntimeBackup "xinput1_3.dll" "xinput"
   !insertmacro RepairRuntimeBackup "SDL3.dll" "sdl"
@@ -304,13 +355,13 @@ upgrade_recovery_prepare:
 
 originals_ready:
 
-  StrCpy $InstallStage "한국어 STR 설치"
-  DetailPrint "한국어 STR와 런타임 파일을 설치하는 중..."
+  StrCpy $InstallStage "한국어 파일 설치"
+  DetailPrint "한국어 개선 패치를 설치하는 중..."
   ClearErrors
   CopyFiles /SILENT "$PLUGINSDIR\text_assets_global.str" "$INSTDIR\text_assets\text_assets_global.str"
   IfErrors install_error
   ClearErrors
-  CopyFiles /SILENT "$PLUGINSDIR\D8CBB618.str" "$INSTDIR\text_assets\text\D8CBB618.str"
+  CopyFiles /SILENT "$PLUGINSDIR\${PATCH_LOCALIZATION_FILE}" "$INSTDIR\text_assets\text\${PATCH_LOCALIZATION_FILE}"
   IfErrors install_error
 
   SetOverwrite on
@@ -401,7 +452,7 @@ patch_error:
   FileWrite $0 "patch_error: $PatchResult$\r$\nfont_source: $FontSource$\r$\ntext_source: $TextSource$\r$\n"
   FileClose $0
 !endif
-  MessageBox MB_ICONSTOP|MB_OK "원본 STR 검증 또는 변환에 실패했습니다.$\r$\n$\r$\nSteam판 Dead Space (2008) 1.0.0.222의 깨끗한 원본 파일이 필요합니다. Steam에서 파일 무결성 검사를 한 뒤 다시 실행하십시오.$\r$\n$\r$\n상세 결과: $PatchResult" /SD IDOK
+  MessageBox MB_ICONSTOP|MB_OK "게임 파일을 확인할 수 없어 설치를 중단했습니다.$\r$\n$\r$\nSteam판 Dead Space (2008) 1.0.0.222가 원본 상태로 설치되어 있어야 합니다. Steam에서 '설치된 파일 무결성 확인'을 실행한 뒤 다시 설치하십시오." /SD IDOK
   Abort
 
 upgrade_backup_error:
@@ -464,13 +515,22 @@ Function un.RestoreInstalledFiles
   StrCpy $BackupDir "$INSTDIR\DS1K_Backup_v0.1"
   StrCpy $RestoreFailed "0"
   IfFileExists "$BackupDir\text_assets\text_assets_global.str" 0 un_no_backup
-  IfFileExists "$BackupDir\text_assets\text\D8CBB618.str" 0 un_no_backup
+  IfFileExists "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}" un_text_backup_ready
+  IfFileExists "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}.absent" 0 un_no_backup
+un_text_backup_ready:
   ClearErrors
   CopyFiles /SILENT "$BackupDir\text_assets\text_assets_global.str" "$INSTDIR\text_assets\text_assets_global.str"
   IfErrors un_restore_error
+  IfFileExists "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}" 0 un_restore_text_absent
   ClearErrors
-  CopyFiles /SILENT "$BackupDir\text_assets\text\D8CBB618.str" "$INSTDIR\text_assets\text\D8CBB618.str"
+  CopyFiles /SILENT "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}" "$INSTDIR\text_assets\text\${PATCH_LOCALIZATION_FILE}"
   IfErrors un_restore_error
+  Goto un_restore_text_done
+un_restore_text_absent:
+  ClearErrors
+  Delete "$INSTDIR\text_assets\text\${PATCH_LOCALIZATION_FILE}"
+  IfErrors un_restore_error
+un_restore_text_done:
   !insertmacro RestoreRuntime "ds1k_utf8.dll" "ds1k" "uninstall"
   !insertmacro RestoreRuntime "xinput1_3.dll" "xinput" "uninstall"
   !insertmacro RestoreRuntime "SDL3.dll" "sdl" "uninstall"

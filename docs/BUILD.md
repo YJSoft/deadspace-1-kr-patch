@@ -133,10 +133,16 @@ $nsisRoot = .\scripts\prepare-nsis.ps1
 .\scripts\generate-vpatch.ps1 `
   -NsisRoot $nsisRoot `
   -OriginalTextAssets <원본-text_assets_global.str> `
-  -OriginalLocalization <원본-D8CBB618.str>
+  -OriginalLocalization <원본-12F4D5F8.str> `
+  -LegacyTextAssets <이전-설치판-기준-text_assets_global.str> `
+  -LegacyLocalization <이전-설치판-기준-D8CBB618.str>
 ```
 
-스크립트는 알려진 Steam 원본 SHA-256을 확인한 뒤 작업한다. 생성된
+현재 Steam 영어 설치본은 `12F4D5F8.str`를 포함하며, 설치기는 여기서 패치용
+`D8CBB618.str`를 새로 생성한다. `Legacy*` 입력은 이전 배포판에서 바로 업그레이드할
+수 있도록 함께 넣는 선택 호환 입력이며 두 파일을 한 쌍으로 지정한다.
+
+스크립트는 알려진 Steam 원본과 레거시 입력 SHA-256을 확인한 뒤 작업한다. 생성된
 `deadspace1-kr-v0.1.pat`와 `manifest.json`을 함께 커밋한다. 원본 또는 완성 STR는
 커밋하지 않는다.
 

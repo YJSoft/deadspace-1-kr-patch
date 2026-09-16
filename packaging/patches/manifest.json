@@ -1,27 +1,39 @@
-﻿{
-    "format":  1,
-    "patch":  {
-                  "file":  "deadspace1-kr-v0.1.pat",
-                  "sha256":  "5F4219CD3AF694F9EC8737E559E37B03051529645DC4E16C2878A06220F5A29A"
-              },
-    "inputs":  [
-                   {
-                       "file":  "text_assets/text_assets_global.str",
-                       "sha256":  "CCB906F6AC651E0E1C3E85E247C94CA11D96CA03F1B53A88B6EF679C2A32F3E1"
-                   },
-                   {
-                       "file":  "text_assets/text/D8CBB618.str",
-                       "sha256":  "30159AA3748058AC639839DEFB9CC233DBE7158CA0B09538CDC5DBC27BABE0BC"
-                   }
-               ],
-    "outputs":  [
-                    {
-                        "file":  "text_assets/text_assets_global.str",
-                        "sha256":  "E87A4FC56065326E12B5688DDE1529115183AE2EA8BF022341FB72ED5BD2EDF8"
-                    },
-                    {
-                        "file":  "text_assets/text/D8CBB618.str",
-                        "sha256":  "06ECCAAFDE78A735C0BB299F422441CFAEC15D4EC7EFA22BB572FD7AE0829FC4"
-                    }
-                ]
+{
+  "format": 2,
+  "patch": {
+    "file": "deadspace1-kr-v0.1.pat",
+    "sha256": "36C569199F1F65D3A77C590A165DDD95E28CB942633B93F49AC51369CB0F1345"
+  },
+  "inputs": [
+    {
+      "file": "text_assets/text_assets_global.str",
+      "sha256": "85F9474ABA01FAA369EF60494EBC1988D04149DD54BD1D4D5DC9B073E335986F",
+      "kind": "steam"
+    },
+    {
+      "file": "text_assets/text/12F4D5F8.str",
+      "sha256": "5DA12D429E6918ADAA9F68381F27170F92C9236BF36D6D192B37D7CF641B0B47",
+      "kind": "steam"
+    },
+    {
+      "file": "text_assets/text_assets_global.str",
+      "sha256": "CCB906F6AC651E0E1C3E85E247C94CA11D96CA03F1B53A88B6EF679C2A32F3E1",
+      "kind": "legacy-upgrade"
+    },
+    {
+      "file": "text_assets/text/D8CBB618.str",
+      "sha256": "30159AA3748058AC639839DEFB9CC233DBE7158CA0B09538CDC5DBC27BABE0BC",
+      "kind": "legacy-upgrade"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "text_assets/text_assets_global.str",
+      "sha256": "E87A4FC56065326E12B5688DDE1529115183AE2EA8BF022341FB72ED5BD2EDF8"
+    },
+    {
+      "file": "text_assets/text/D8CBB618.str",
+      "sha256": "06ECCAAFDE78A735C0BB299F422441CFAEC15D4EC7EFA22BB572FD7AE0829FC4"
+    }
+  ]
 }
