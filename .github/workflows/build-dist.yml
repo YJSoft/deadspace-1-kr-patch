@@ -1,0 +1,42 @@
+name: Build dist
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Prepare verified SDL3 x86 files
+        shell: pwsh
+        run: .\scripts\prepare-sdl3.ps1
+
+      - name: Build native DLLs
+        shell: cmd
+        run: build.cmd
+
+      - name: Build asset tools
+        shell: cmd
+        run: build-assets.cmd
+
+      - name: Stage distribution files
+        shell: pwsh
+        run: .\scripts\stage-dist.ps1
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dead-space-kr-dist-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30

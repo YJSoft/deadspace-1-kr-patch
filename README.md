@@ -62,6 +62,10 @@ build-assets.cmd
 `build.cmd`는 `ds1k_utf8.dll`, DeadSpaceFixes 기반 `xinput1_3.dll`과 SDL3 런타임을
 `dist/`에 모은다. `dist/`는 빌드 산출물이므로 Git에서 제외된다.
 
+GitHub Actions도 push된 모든 커밋과 pull request를 Windows 환경에서 빌드하고
+`dead-space-kr-dist-<commit>` artifact를 업로드한다. 이 artifact에는 게임 원본에서
+파생되는 STR가 포함되지 않으므로 테스트 설치에는 로컬에서 생성한 STR가 별도로 필요하다.
+
 폰트와 번역 STR 생성에는 소유 중인 원본 게임 리소스, 확장 FFN 테이블을 가진 작업용
 폰트 리소스, Gibbed.Visceral 계열 unpack/pack 도구와 `squish64.dll`이 별도로
 필요하다. 이들은 저작권 또는 바이너리 산출물 문제로 저장소에 포함하지 않는다.

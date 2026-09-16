@@ -44,8 +44,8 @@ build.cmd
 중간 파일은 `%TEMP%\ds1k-prototype-build`와 `%TEMP%\ds1k-fixes-build`에 생성된다.
 최종 `dist/`도 Git 추적 대상이 아니다.
 
-현재 배치 파일은 Visual Studio Community 기본 경로를 사용한다. 다른 에디션이나 설치
-경로에서는 `VsDevCmd.bat` 경로를 로컬 환경에 맞게 바꾼다.
+배치 파일은 Visual Studio Installer의 `vswhere.exe`로 최신 설치를 찾으므로 Community,
+Professional, Enterprise와 기본 경로가 아닌 설치를 모두 지원한다.
 
 ## 4. C# 생성기 빌드
 
@@ -118,3 +118,18 @@ generate-translations.cmd <original-lh2> <legacy-Launcher.xml> <output.csv>
 
 전각 공백과 탭을 ASCII 공백으로 정규화하며, 의미 없는 항목을 제외한다. 재생성 결과로
 현재 검수 CSV를 무조건 덮어쓰지 말고 ID별 diff를 검토한다.
+
+## 7. GitHub Actions 빌드
+
+`.github/workflows/build-dist.yml`은 저장소에 push된 모든 커밋과 pull request에서
+Windows Server 2022 빌드를 수행한다. SDL 3.2.8 공식 Visual C++ 개발 패키지는 고정된
+URL과 SHA-256으로 검증한 뒤 사용한다.
+
+완료된 `dead-space-kr-dist-<commit>` artifact에는 다음 파일이 들어간다.
+
+- `ds1k_utf8.dll`, `xinput1_3.dll`, `SDL3.dll`
+- `DeadSpaceFixes.ini`, 설치·설정 안내, 제3자 라이선스
+- C# 자산 생성기 2종과 `SHA256SUMS.txt`
+
+게임 원본과 확장 폰트 작업본이 필요한 STR는 CI에서 만들 수 없으므로 artifact에
+포함하지 않는다. CI artifact만으로는 완성 패치를 설치할 수 없다.

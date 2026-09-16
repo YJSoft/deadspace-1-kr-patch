@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64
+call "%~dp0tools\vsdevcmd.cmd" x64
 if errorlevel 1 exit /b %errorlevel%
 
 set "ASSET_BUILD=%TEMP%\ds1k-prototype-assets"

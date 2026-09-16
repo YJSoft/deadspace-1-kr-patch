@@ -42,8 +42,6 @@ internal static class BuildPocAssets
         public string Tg4d;
         public ushort GlyphWidth;
         public ushort GlyphHeight;
-        public short GlyphOffsetX;
-        public short GlyphOffsetY;
         public float GlyphEmSize;
 
         public FontAsset(
@@ -51,16 +49,12 @@ internal static class BuildPocAssets
             string tg4d,
             ushort glyphWidth,
             ushort glyphHeight,
-            short glyphOffsetX,
-            short glyphOffsetY,
             float glyphEmSize)
         {
             Inf = inf;
             Tg4d = tg4d;
             GlyphWidth = glyphWidth;
             GlyphHeight = glyphHeight;
-            GlyphOffsetX = glyphOffsetX;
-            GlyphOffsetY = glyphOffsetY;
             GlyphEmSize = glyphEmSize;
         }
     }
@@ -451,70 +445,92 @@ internal static class BuildPocAssets
         return measured.Width;
     }
 
-    private static void DrawGlyph(
-        Graphics graphics,
+    private static GraphicsPath CreatePositionedGlyphPath(
         FontFamily family,
         ushort codepoint,
-        Rectangle rectangle,
-        FontAsset asset,
-        float advance)
+        FontAsset asset)
     {
-        using (var transparent = new SolidBrush(Color.Transparent))
+        var path = new GraphicsPath();
+        path.AddString(
+            ((char)codepoint).ToString(),
+            family,
+            (int)FontStyle.Regular,
+            asset.GlyphEmSize,
+            PointF.Empty,
+            StringFormat.GenericTypographic);
+
+        RectangleF bounds = path.GetBounds();
+        if (bounds.Width <= 0.0f || bounds.Height <= 0.0f)
         {
-            graphics.FillRectangle(transparent, rectangle);
+            path.Dispose();
+            throw new InvalidDataException(
+                "Font produced an empty glyph for U+" + codepoint.ToString("X4"));
         }
 
-        using (var path = new GraphicsPath())
+        // Keep one shared line box for Latin, Hangul and punctuation. Horizontal
+        // centering in a fixed 32 px cell is intentionally not used: the engine
+        // advances by the FFN advance field, so centering a narrow glyph such as
+        // 'i' in a 32 px quad creates a large false gap before the visible ink.
+        float lineHeight = asset.GlyphEmSize *
+            family.GetLineSpacing(FontStyle.Regular) /
+            family.GetEmHeight(FontStyle.Regular);
+        float logicalTop = (asset.GlyphHeight - lineHeight) * 0.5f;
+        using (var transform = new Matrix())
         {
-            path.AddString(
-                ((char)codepoint).ToString(),
-                family,
-                (int)FontStyle.Regular,
-                asset.GlyphEmSize,
-                PointF.Empty,
-                StringFormat.GenericTypographic);
+            transform.Translate(0.0f, logicalTop, MatrixOrder.Append);
+            path.Transform(transform);
+        }
+        return path;
+    }
 
-            RectangleF bounds = path.GetBounds();
-            if (bounds.Width <= 0.0f || bounds.Height <= 0.0f)
-            {
-                throw new InvalidDataException(
-                    "Font produced an empty glyph for U+" + codepoint.ToString("X4"));
-            }
+    private static Rectangle GetGlyphBounds(GraphicsPath path, FontAsset asset, ushort codepoint)
+    {
+        RectangleF bounds = path.GetBounds();
+        var result = Rectangle.FromLTRB(
+            (int)Math.Floor(bounds.Left),
+            (int)Math.Floor(bounds.Top),
+            (int)Math.Ceiling(bounds.Right),
+            (int)Math.Ceiling(bounds.Bottom));
+        if (result.Width <= 0 || result.Height <= 0 ||
+            result.Width > asset.GlyphWidth || result.Height > asset.GlyphHeight)
+        {
+            throw new InvalidDataException(
+                "Font glyph exceeds its logical cell: U+" +
+                codepoint.ToString("X4") + " bounds=" + result);
+        }
+        return result;
+    }
 
-            // Keep one shared font line box for Latin, Hangul and punctuation.
-            // Centering each outline independently destroys the typeface's
-            // baseline (notably for Latin descenders), which is what made the
-            // old Steam/Nanum mixture look vertically staggered.
-            float lineHeight = asset.GlyphEmSize *
-                family.GetLineSpacing(FontStyle.Regular) /
-                family.GetEmHeight(FontStyle.Regular);
-            float logicalLeft = (asset.GlyphWidth - advance) * 0.5f;
-            float logicalTop = (asset.GlyphHeight - lineHeight) * 0.5f;
-            float scaleX = rectangle.Width / (float)asset.GlyphWidth;
-            float scaleY = rectangle.Height / (float)asset.GlyphHeight;
+    private static void DrawGlyph(
+        Graphics graphics,
+        GraphicsPath path,
+        Rectangle logicalBounds,
+        Rectangle atlasRectangle,
+        ushort codepoint)
+    {
+        using (var transform = new Matrix())
+        {
+            transform.Translate(
+                atlasRectangle.Left - logicalBounds.Left,
+                atlasRectangle.Top - logicalBounds.Top,
+                MatrixOrder.Append);
+            path.Transform(transform);
+        }
 
-            using (var transform = new Matrix())
-            {
-                transform.Translate(logicalLeft, logicalTop, MatrixOrder.Append);
-                transform.Scale(scaleX, scaleY, MatrixOrder.Append);
-                transform.Translate(rectangle.Left, rectangle.Top, MatrixOrder.Append);
-                path.Transform(transform);
-            }
+        RectangleF renderedBounds = path.GetBounds();
+        if (renderedBounds.Left < atlasRectangle.Left - 0.01f ||
+            renderedBounds.Top < atlasRectangle.Top - 0.01f ||
+            renderedBounds.Right > atlasRectangle.Right + 0.01f ||
+            renderedBounds.Bottom > atlasRectangle.Bottom + 0.01f)
+        {
+            throw new InvalidDataException(
+                "Positioned glyph exceeds its atlas rectangle: U+" +
+                codepoint.ToString("X4"));
+        }
 
-            RectangleF renderedBounds = path.GetBounds();
-            if (renderedBounds.Left < rectangle.Left - 0.01f ||
-                renderedBounds.Top < rectangle.Top - 0.01f ||
-                renderedBounds.Right > rectangle.Right + 0.01f ||
-                renderedBounds.Bottom > rectangle.Bottom + 0.01f)
-            {
-                throw new InvalidDataException(
-                    "Font glyph exceeds its logical cell: U+" + codepoint.ToString("X4"));
-            }
-
-            using (var brush = new SolidBrush(Color.White))
-            {
-                graphics.FillPath(brush, path);
-            }
+        using (var brush = new SolidBrush(Color.White))
+        {
+            graphics.FillPath(brush, path);
         }
     }
 
@@ -655,21 +671,42 @@ internal static class BuildPocAssets
                     !Char.IsWhiteSpace((char)codepoint) &&
                     CharUnicodeInfo.GetUnicodeCategory((char)codepoint) != UnicodeCategory.Format;
                 Rectangle rectangle = Rectangle.Empty;
+                Rectangle logicalBounds = Rectangle.Empty;
                 if (visible)
                 {
-                    rectangle = packer.Allocate(asset.GlyphWidth, asset.GlyphHeight);
-                    DrawGlyph(graphics, family, codepoint, rectangle, asset, measuredAdvance);
+                    using (GraphicsPath path = CreatePositionedGlyphPath(
+                        family,
+                        codepoint,
+                        asset))
+                    {
+                        logicalBounds = GetGlyphBounds(path, asset, codepoint);
+                        rectangle = packer.Allocate(
+                            logicalBounds.Width,
+                            logicalBounds.Height);
+                        DrawGlyph(
+                            graphics,
+                            path,
+                            logicalBounds,
+                            rectangle,
+                            codepoint);
+                    }
                     ++visibleCount;
                 }
 
                 foreach (int record in records)
                 {
                     WriteU16(inf, record, codepoint);
-                    WriteU16(inf, record + 2, visible ? asset.GlyphWidth : (ushort)0);
-                    WriteU16(inf, record + 4, visible ? asset.GlyphHeight : (ushort)0);
+                    WriteU16(inf, record + 2, visible ? (ushort)logicalBounds.Width : (ushort)0);
+                    WriteU16(inf, record + 4, visible ? (ushort)logicalBounds.Height : (ushort)0);
                     WriteU16(inf, record + 6, advance);
-                    WriteU16(inf, record + 8, unchecked((ushort)asset.GlyphOffsetX));
-                    WriteU16(inf, record + 10, unchecked((ushort)asset.GlyphOffsetY));
+                    WriteU16(
+                        inf,
+                        record + 8,
+                        visible ? unchecked((ushort)(short)logicalBounds.Left) : (ushort)0);
+                    WriteU16(
+                        inf,
+                        record + 10,
+                        visible ? unchecked((ushort)(short)logicalBounds.Top) : (ushort)0);
                     WriteGlyphRectangle(inf, record, rectangle);
                 }
             }
@@ -774,19 +811,16 @@ internal static class BuildPocAssets
                     @"FFN\0105_russellsquare32.inf",
                     @"tg4d\0013_russellsquare32.tg4d",
                     32, 32,
-                    0, 0,
                     25.0f),
                 new FontAsset(
                     @"FFN\0106_briemakademistdsemibold32.inf",
                     @"tg4d\0001_briemakademistdsemibold32.tg4d",
                     32, 32,
-                    0, 0,
                     25.0f),
                 new FontAsset(
                     @"FFN\0108_eurostileltstdbold32.inf",
                     @"tg4d\0007_eurostileltstdbold32.tg4d",
                     32, 32,
-                    0, 0,
                     25.0f),
             };
 
