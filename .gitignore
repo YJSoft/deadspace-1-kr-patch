@@ -1,0 +1,52 @@
+# Visual Studio / compiler output
+.vs/
+build/
+dist/
+release/
+Debug/
+Release/
+x64/
+obj/
+*.obj
+*.pch
+*.ilk
+*.exp
+*.idb
+*.ipdb
+*.iobj
+*.tlog
+*.lastbuildstate
+*.vcxproj.user
+*.suo
+
+# Executables and linked binaries
+*.dll
+*.exe
+*.lib
+*.pdb
+
+# Generated or extracted game resources
+*.str
+*.lh2
+*.tg4d
+*.poc.png
+*.dxt5.png
+runtime/
+backup/
+unpacked/
+work/
+text_assets/
+Dead Space.exe
+Launcher.xml
+
+# Distribution and runtime state
+*.zip
+*.log
+DS1K/
+DS1K_Backup_PreInstall/
+
+# Local editor / OS files
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

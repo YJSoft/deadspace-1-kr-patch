@@ -1,0 +1,203 @@
+Dead Space KR 0.1 — 테스트 설치 및 설정 안내
+==============================================
+
+[지원 대상]
+
+- Steam판 Dead Space (2008) 1.0.0.222
+- 원본 Dead Space.exe 사용 권장
+- 게임 실행은 Steam 라이브러리에서 할 것
+
+이 버전은 Dead Space의 한국어 번역을 ID 기반 CSV로 관리하는 번역 검수판입니다.
+Steam 원본 문자열 ID 5,045개 가운데 번역 가능한 4,550개가 모두 실제 번역으로
+채워져 있습니다. 유효하지 않은 UTF-8, 한 글자와 의미 없는 기호 항목 495개는 원문
+그대로 유지합니다. 아직 전체 플레이 검수가 끝나지 않았으므로 번역 오류, 줄바꿈
+문제와 문맥 오류가 있을 수 있습니다.
+
+
+1. 자동 설치 (권장)
+-------------------
+
+1) 게임을 완전히 종료합니다.
+2) ZIP 파일을 풀고 폴더 안의 파일 구조를 그대로 유지합니다.
+3) install.cmd를 실행합니다.
+4) 경로를 물으면 Dead Space.exe가 있는 게임 폴더를 입력합니다.
+
+   예: D:\SteamLibrary\steamapps\common\Dead Space
+
+   배포 폴더를 게임 폴더 안에 넣은 경우에는 부모 폴더를 자동 인식합니다. 게임 폴더를
+   install.cmd 위로 끌어 놓아도 됩니다.
+
+5) 설치가 끝나면 Steam 라이브러리에서 Dead Space를 실행합니다.
+6) 메인화면 오른쪽 아래에 다음 문구가 두 줄로 나오면 DLL 적용이 완료된 것입니다.
+
+   Dead Space KR 0.1
+   번역 검수용 버전
+
+설치기는 교체 전 파일을 다음 폴더에 한 번만 보관합니다.
+
+   Dead Space\DS1K_Backup_PreInstall
+
+재설치해도 최초 백업은 덮어쓰지 않습니다. 테스트가 끝날 때까지 이 폴더와 압축을 푼
+배포 폴더를 삭제하지 마십시오.
+
+
+2. 수동 설치
+------------
+
+payload 폴더의 파일을 다음 위치로 복사합니다. 기존 파일은 먼저 별도 백업하십시오.
+
+payload\xinput1_3.dll
+  -> Dead Space\xinput1_3.dll
+
+payload\ds1k_utf8.dll
+  -> Dead Space\ds1k_utf8.dll
+
+payload\SDL3.dll
+  -> Dead Space\SDL3.dll
+
+payload\DeadSpaceFixes.ini
+  -> Dead Space\DeadSpaceFixes.ini
+
+payload\text_assets\text_assets_global.str
+  -> Dead Space\text_assets\text_assets_global.str
+
+payload\text_assets\text\D8CBB618.str
+  -> Dead Space\text_assets\text\D8CBB618.str
+
+Dead Space.exe는 교체하거나 수정하지 않습니다.
+
+
+3. 설정 방법
+------------
+
+게임 폴더의 DeadSpaceFixes.ini를 메모장으로 열고 원하는 항목을 1(사용) 또는
+0(사용 안 함)으로 바꿉니다. 게임 실행 중 수정한 값은 다음 실행부터 적용됩니다.
+
+[Fixes]
+
+FixVSync=1
+  게임 VSync의 30 FPS 제한 동작을 수정합니다. 게임 엔진은 여전히 디스플레이
+  주사율의 절반 동기화를 사용할 수 있습니다.
+
+FixSubtitleScale=1
+  실제 게임 창 높이를 기준으로 자막 크기와 영역을 자동 조절합니다. 720p 초과에서
+  확대하고 720p 이하는 원본보다 작아지지 않도록 1.0배를 유지합니다. 원본 자막
+  크기만 사용하려면 0으로 바꿉니다.
+
+PatchOutDInput8=1
+  느린 구형 DirectInput 장치 검사를 건너뜁니다. 아주 오래된 조이스틱이나 휠이
+  필요하면 0으로 바꿉니다.
+
+UseHighPrecisionTimer=1
+  고프레임 환경에서 물리 및 래그돌 오차를 줄이기 위해 고정밀 타이머를 사용합니다.
+
+SkipLoadingScreenDelay=0
+  1로 바꾸면 레벨 로딩 완료 후의 인위적인 대기 시간을 건너뜁니다.
+
+[Patches]
+
+BorderlessWindowed=1
+  창 모드를 보더리스로 바꿉니다. 게임 설정에서 전체 화면을 끈 상태로 사용하십시오.
+  Alt+Tab 후 게임으로 돌아오면 커서를 게임 창에 다시 고정하고 시스템 커서를
+  숨깁니다. 독점 전체 화면을 유지하려면 0으로 바꿉니다.
+
+RemoveTelemetry=1
+  게임 자체의 네트워크/텔레메트리 초기화만 차단합니다. Steam과 SDL3의 네트워크
+  호출은 원본으로 통과시킵니다.
+
+SkipIshimuraLandingCutscene=0
+  1로 바꾸면 새 게임/새 게임+의 이시무라 착륙 영상을 건너뜁니다.
+
+SkipIntroToMainMenu=0
+  1로 바꾸면 부팅 로고/인트로를 건너뛰고 메인 메뉴로 이동합니다.
+
+[Features]
+
+SafeFPSCap=0
+  1로 바꾸면 게임을 60 FPS로 제한합니다. 과도한 고프레임에서는 원작 엔진의
+  물리/스크립트 문제가 남을 수 있습니다.
+
+설정과 무관하게 항상 적용되는 항목:
+
+- 한국어 UTF-8 처리
+- CSV에서 생성한 ID 기반 한국어 문자열 리소스
+- 한글·영문·숫자·기호를 나눔바른고딕으로 통일
+- 공통 em·라인 박스·기준선 및 독립 여백 적용
+- 메인화면 Dead Space KR 0.1 / 번역 검수용 버전 표시
+- 16배 이방성 필터링
+- 8개 초과 논리 프로세서 환경의 CPU affinity 보정
+- 안전한 세이브 문자열 처리
+- SDL3 기반 PS4/PS5/Switch 컨트롤러 지원
+
+
+4. 번역 수정
+------------
+
+translations\dead_space_ko.csv의 translation 열만 수정하면 됩니다. id는 문자열을
+식별하는 값이고 english는 참고용 Steam 원문입니다. 번역 데이터 편집과 빌드 규칙은
+translations\README.md를 참고하십시오.
+
+
+5. 제거 및 원상복구
+-------------------
+
+1) 게임을 완전히 종료합니다.
+2) uninstall.cmd를 실행합니다.
+3) 설치 때 지정한 Dead Space 게임 폴더를 지정합니다.
+
+설치기가 만든 백업이 있으면 원래 파일을 복원하고, 설치 전에 없던 파일은 제거합니다.
+안전을 위해 DS1K_Backup_PreInstall과 로그 폴더는 자동 삭제하지 않습니다. 복구 확인
+후 직접 삭제할 수 있습니다.
+
+
+6. 문제 해결 및 제보
+--------------------
+
+Application load error 5:0000065434
+  Dead Space.exe를 직접 실행하지 말고 Steam 라이브러리에서 실행하십시오.
+
+게임이 실행되지 않음
+  xinput1_3.dll, ds1k_utf8.dll, SDL3.dll 세 파일이 게임 루트에 있는지 확인합니다.
+  다른 XInput/ASI 프록시 모드와의 동시 사용은 보장하지 않습니다.
+
+한국어가 나오지 않음
+  게임 폴더의 DS1K\DS1K.log에서 UTF-8 hooks installed. 문구를 확인합니다.
+
+< 번역 누락 : 0xID >가 나옴
+  오류가 아니라 현재 번역 CSV에 대응 번역이 없다는 표시입니다. 표시된 ID로 CSV를
+  검색하면 해당 영어 원문과 translation 셀을 바로 찾을 수 있습니다.
+
+글자가 네모 또는 공백으로 나옴
+  해당 화면, 표시 문장과 문자열 ID가 보이면 ID를 함께 제보해 주십시오. 현재 CSV의
+  번역문에서 수집한 비ASCII 문자를 세 UI 글꼴에 포함했습니다.
+
+자막 크기 문제
+  해상도, 화면비, 전체 화면 여부와 스크린샷을 함께 제보해 주십시오. 임시로
+  FixSubtitleScale=0을 사용하면 원작 크기로 돌아갑니다.
+
+튕김 제보 시 함께 보낼 정보:
+
+- 정확한 튕김 시점과 재현 순서
+- 해상도/화면비/전체 화면 여부
+- DeadSpaceFixes.ini
+- DS1K\DS1K.log
+- 함께 사용하는 다른 모드/오버레이 목록
+
+
+7. 라이선스 및 출처
+-------------------
+
+DeadSpace2008Fixes 기반 수정 코드를 포함합니다.
+https://github.com/seamusduncmcgrath/DeadSpace2008Fixes
+기준 revision: ec7ae5cdb799af5494e483cb3357b897d8fe9fe1
+
+licenses 폴더에 다음 라이선스 전문을 포함했습니다.
+
+- DeadSpace2008Fixes-MIT.txt
+- MinHook-BSD-2-Clause.txt
+- SDL3-zlib.txt
+- NanumBarunGothic-OFL-1.1.txt
+
+DeadSpace2008Fixes는 MIT 라이선스이므로 저작권 및 허가 고지 전문을 배포물에
+보존해야 합니다. SDL3.dll, 내장 MinHook과 나눔바른고딕은 별도 라이선스 고지도 함께
+필요합니다.

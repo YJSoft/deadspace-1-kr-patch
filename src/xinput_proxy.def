@@ -1,0 +1,10 @@
+LIBRARY "ds1k_utf8"
+EXPORTS
+    XInputGetState                         @1
+    XInputSetState                         @2
+    XInputGetCapabilities                  @3
+    XInputEnable                           @4
+    XInputGetDSoundAudioDeviceGuids        @5
+    XInputGetBatteryInformation            @6
+    XInputGetKeystroke                     @7
+    XInputGetStateEx                       @100

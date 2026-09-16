@@ -1,0 +1,13 @@
+DS1K test build includes and modifies code from DeadSpace2008Fixes:
+https://github.com/seamusduncmcgrath/DeadSpace2008Fixes
+Upstream revision: ec7ae5cdb799af5494e483cb3357b897d8fe9fe1
+
+It also redistributes SDL3.dll and embeds MinHook through that project.
+The generated game font atlases use NanumBarunGothic Regular, Copyright (c)
+2010 NAVER Corporation, under the SIL Open Font License 1.1.
+The complete applicable license notices are included under third_party:
+
+- DeadSpace2008Fixes/LICENSE
+- licenses/MinHook-BSD-2-Clause.txt
+- licenses/SDL3-zlib.txt
+- NanumBarunGothic/OFL-1.1.txt
