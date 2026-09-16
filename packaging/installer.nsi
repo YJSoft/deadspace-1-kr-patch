@@ -56,7 +56,7 @@ VIAddVersionKey /LANG=1042 "LegalCopyright" "Third-party licenses are included w
 !define MUI_WELCOMEPAGE_TEXT "이 마법사는 Steam 또는 EA App판 Dead Space (2008)에 한국어 개선 패치를 설치합니다.$\r$\n$\r$\n게임을 완전히 종료한 상태에서 계속하십시오. 정상적으로 설치된 원본 게임이 필요합니다."
 !define MUI_DIRECTORYPAGE_TEXT_TOP "Dead Space.exe가 들어 있는 Dead Space (2008) 설치 폴더를 선택하십시오."
 !define MUI_FINISHPAGE_TITLE "설치 완료"
-!define MUI_FINISHPAGE_TEXT "한국어 개선 패치 설치가 완료되었습니다.$\r$\n$\r$\n원본 파일은 Dead Space 설치 폴더의 DS1K_Backup_v0.1에 보존됩니다."
+!define MUI_FINISHPAGE_TEXT "한국어 개선 패치 설치가 완료되었습니다.$\r$\n$\r$\n원본 파일은 Dead Space 설치 폴더의 DS1K_Backup에 보존됩니다."
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
@@ -81,6 +81,9 @@ Var TextPatchOk
 Var RestoreFailed
 Var InstallStage
 Var TextOriginalAbsent
+Var BackupMigrationFailed
+Var BackupMigratedFrom
+Var BackupTargetDir
 
 !macro BackupRuntime FILE TAG
   IfFileExists "$BackupDir\runtime\${FILE}" backup_${TAG}_done
@@ -189,6 +192,40 @@ invalid_dir:
   Abort
 FunctionEnd
 
+Function LocateBackupDirectory
+  StrCpy $BackupMigrationFailed "0"
+  StrCpy $BackupMigratedFrom ""
+  IfFileExists "$BackupDir\text_assets\text_assets_global.str" backup_locate_done
+  FindFirst $0 $1 "$INSTDIR\DS1K_Backup_v*"
+backup_locate_loop:
+  StrCmp $1 "" backup_locate_close
+  IfFileExists "$INSTDIR\$1\text_assets\text_assets_global.str" 0 backup_locate_next
+  StrCpy $BackupDir "$INSTDIR\$1"
+  StrCpy $BackupMigratedFrom "$1"
+  Goto backup_locate_close
+backup_locate_next:
+  FindNext $0 $1
+  Goto backup_locate_loop
+backup_locate_close:
+  FindClose $0
+backup_locate_done:
+FunctionEnd
+
+Function MigrateBackupDirectory
+  StrCmp $BackupMigratedFrom "" backup_migration_done
+  # Remove only an empty destination left by an interrupted install.
+  RMDir "$BackupTargetDir"
+  ClearErrors
+  Rename "$BackupDir" "$BackupTargetDir"
+  IfErrors backup_migration_failed
+  StrCpy $BackupDir "$BackupTargetDir"
+  DetailPrint "기존 원본 백업 폴더를 DS1K_Backup으로 변경했습니다: $BackupMigratedFrom"
+  Goto backup_migration_done
+backup_migration_failed:
+  StrCpy $BackupMigrationFailed "1"
+backup_migration_done:
+FunctionEnd
+
 Function un.onInit
   GetFullPathName $INSTDIR "$INSTDIR\.."
 !ifdef TEST_BUILD
@@ -228,7 +265,9 @@ FunctionEnd
 Section "한국어 개선 패치" SecMain
   SectionIn RO
   StrCpy $InstallStage "초기화"
-  StrCpy $BackupDir "$INSTDIR\DS1K_Backup_v0.1"
+  StrCpy $BackupTargetDir "$INSTDIR\DS1K_Backup"
+  StrCpy $BackupDir "$BackupTargetDir"
+  Call LocateBackupDirectory
   StrCpy $FontSource "$INSTDIR\text_assets\text_assets_global.str"
   StrCpy $TextSource "$INSTDIR\text_assets\text\${PATCH_LOCALIZATION_FILE}"
   StrCpy $TextOriginalAbsent "0"
@@ -241,6 +280,7 @@ initial_text_source_ready:
   StrCpy $BackupRecoveryNeeded "0"
 
   ReadRegStr $ExistingBuild ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "BuildCommit"
+  IfFileExists "$BackupDir\text_assets\text_assets_global.str" upgrade_found
   IfFileExists "$INSTDIR\DS1K_Patch\installed-version.txt" upgrade_found
   ReadRegStr $0 ${PATCH_REG_ROOT} "${UNINSTALL_KEY}" "InstallLocation"
   StrCmp $0 "$INSTDIR" upgrade_found upgrade_detection_done
@@ -319,6 +359,8 @@ retry_live_sources_ready:
 
 patch_ready:
   DetailPrint "설치 준비가 완료되었습니다."
+  Call MigrateBackupDirectory
+  StrCmp $BackupMigrationFailed "1" backup_migration_error
 
   DetailPrint "원본 파일을 백업하는 중..."
   CreateDirectory "$BackupDir\text_assets\text"
@@ -459,6 +501,10 @@ patch_error:
   MessageBox MB_ICONSTOP|MB_OK "게임 파일을 확인할 수 없어 설치를 중단했습니다.$\r$\n$\r$\n지원되는 Steam 또는 EA App판 Dead Space (2008)가 원본 상태로 설치되어 있어야 합니다. 사용 중인 게임 클라이언트에서 게임 파일을 복구한 뒤 다시 설치하십시오." /SD IDOK
   Abort
 
+backup_migration_error:
+  MessageBox MB_ICONSTOP|MB_OK "기존 원본 백업 폴더의 이름을 변경할 수 없어 설치를 중단했습니다.$\r$\n$\r$\n게임 파일은 변경하지 않았습니다. Dead Space와 백업 폴더를 사용하는 프로그램을 종료하고 폴더 쓰기 권한을 확인한 뒤 다시 실행하십시오." /SD IDOK
+  Abort
+
 upgrade_backup_error:
 !ifdef TEST_BUILD
   FileOpen $0 "$INSTDIR\installer-test.log" w
@@ -516,7 +562,7 @@ install_done:
 SectionEnd
 
 Function un.RestoreInstalledFiles
-  StrCpy $BackupDir "$INSTDIR\DS1K_Backup_v0.1"
+  StrCpy $BackupDir "$INSTDIR\DS1K_Backup"
   StrCpy $RestoreFailed "0"
   IfFileExists "$BackupDir\text_assets\text_assets_global.str" 0 un_no_backup
   IfFileExists "$BackupDir\text_assets\text\${PATCH_LOCALIZATION_FILE}" un_text_backup_ready
@@ -553,5 +599,5 @@ Section "Uninstall"
   Call un.RestoreInstalledFiles
   DeleteRegKey ${PATCH_REG_ROOT} "${UNINSTALL_KEY}"
   RMDir /r "$INSTDIR\DS1K_Patch"
-  MessageBox MB_ICONINFORMATION|MB_OK "한국어 개선 패치를 제거하고 원본 파일을 복원했습니다.$\r$\n$\r$\n백업 폴더는 안전을 위해 유지합니다:$\r$\n$INSTDIR\DS1K_Backup_v0.1" /SD IDOK
+  MessageBox MB_ICONINFORMATION|MB_OK "한국어 개선 패치를 제거하고 원본 파일을 복원했습니다.$\r$\n$\r$\n백업 폴더는 안전을 위해 유지합니다:$\r$\n$INSTDIR\DS1K_Backup" /SD IDOK
 SectionEnd
