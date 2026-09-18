@@ -64,7 +64,7 @@ build-assets.cmd
 `dist/`에 모은다. `dist/`는 빌드 산출물이므로 Git에서 제외된다.
 
 GitHub Actions도 push된 모든 커밋과 pull request를 Windows 환경에서 빌드하고
-`DeadSpace1-KR-0.1.exe` 한 파일을 artifact로 업로드한다. 설치기는 경로 선택과 원본
+`DeadSpace1-KR-0.2.exe` 한 파일을 artifact로 업로드한다. 설치기는 경로 선택과 원본
 검증을 거치는 마법사 방식이며, 원본 STR를 백업한 뒤 한국어 STR를 즉석 생성한다.
 기존 설치를 발견하면 저장된 원본으로 복원 후 재패치하며, 설치 커밋을 파일과 제거
 레지스트리에 기록한다. 백업이 없거나 손상되면 게임 클라이언트의 원본 복원을 안내하고
@@ -73,7 +73,7 @@ GitHub Actions도 push된 모든 커밋과 pull request를 Windows 환경에서 
 `main` 브랜치 최신 성공 설치 파일은 다음 고정 주소에서 바로 받을 수 있다. CI가
 성공할 때마다 `nightly` 프리릴리스의 같은 이름 자산을 교체한다.
 
-https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.1.exe
+https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.2.exe
 
 GitHub Actions의 실행별 artifact도 ZIP 없는 단일 EXE로 유지한다. nightly.link는 현재
 `archive: false` 비압축 artifact를 지원하지 않으므로 고정 링크는 GitHub Release
@@ -107,7 +107,7 @@ CSV의 `id`와 `english`는 유지하고 `translation`만 수정한다. CSV는 U
 ## 출처와 라이선스
 
 DeadSpace2008Fixes 수정 코드는 upstream revision
-`ec7ae5cdb799af5494e483cb3357b897d8fe9fe1`을 기준으로 한다. MinHook, SDL3,
+`975836ed1c7de5fd447d3694324fecdc870c8719`을 기준으로 한다. MinHook, SDL3,
 나눔바른고딕을 포함한 제3자 저작물은 각각의 라이선스를 따른다.
 
 프로젝트 고유 코드와 번역 데이터에 적용할 저장소 전체 라이선스는 아직 별도로

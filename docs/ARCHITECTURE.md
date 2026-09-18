@@ -83,7 +83,7 @@ FFN에는 모든 글자를 32×32로 강제하지 않는다. 실제 외곽 폭·
 
 ## DeadSpace2008Fixes 통합 변경
 
-upstream revision `ec7ae5cdb799af5494e483cb3357b897d8fe9fe1`을 기준으로 다음
+upstream revision `975836ed1c7de5fd447d3694324fecdc870c8719`을 기준으로 다음
 DS1K 전용 변경을 포함한다.
 
 - `dllmain.cpp`: 모듈 적용 표와 UTF-8 사이드카 로딩
@@ -93,10 +93,13 @@ DS1K 전용 변경을 포함한다.
   포커스 이탈 시 해제, 게임 활성 상태에서 시스템 커서 숨김
 - `Telemetry.cpp`: 프로세스 전체 WSAStartup을 막지 않고 `Dead Space.exe`에서 직접
   호출한 경우만 차단하여 Steam/SDL 스레드 충돌 방지
-- `VersionString.cpp`: `Dead Space KR 0.1`과 `번역 검수용 버전` 표시
+- `SdlGamepad.cpp`: 이벤트가 잠시 없더라도 감시 스레드를 유지하고, 분리·재연결과
+  XInput 호출 간의 컨트롤러 수명 동기화
+- `VersionString.cpp`: `Dead Space KR 0.2`와 `번역 검수용 버전` 표시
 
 그 밖의 VSync, 타이머, 이방성 필터링, CPU affinity, DirectInput, 세이브 문자열,
-로딩 화면, 컨트롤러 수정은 upstream 구조를 유지한다.
+로딩 화면 수정은 upstream 구조를 유지한다. 새 문서·영상 로그를 F로 건너뛰는
+`SkipLoreVideos` 선택 기능도 포함한다.
 
 ## 안전 원칙
 

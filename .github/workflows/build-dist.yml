@@ -53,7 +53,7 @@ jobs:
       - name: Upload standalone installer
         uses: actions/upload-artifact@v7
         with:
-          path: dist/DeadSpace1-KR-0.1.exe
+          path: dist/DeadSpace1-KR-0.2.exe
           if-no-files-found: error
           retention-days: 30
           archive: false
@@ -65,16 +65,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          $asset = "dist/DeadSpace1-KR-0.1.exe"
+          $asset = "dist/DeadSpace1-KR-0.2.exe"
           $notes = "main 브랜치 최신 자동 빌드입니다.`n`n커밋: ${{ github.sha }}`n`n번역 검수용 버전이므로 테스트 전 원본 세이브를 별도로 보관하십시오."
 
           gh release view nightly --json tagName *> $null
           if ($LASTEXITCODE -eq 0) {
+            gh release delete-asset nightly "DeadSpace1-KR-0.1.exe" -y 2> $null
             gh release upload nightly $asset --clobber
             if ($LASTEXITCODE -ne 0) { throw "Failed to replace the nightly release asset." }
-            gh release edit nightly --title "Dead Space KR 0.1 Nightly" --notes $notes --prerelease
+            gh release edit nightly --title "Dead Space KR 0.2 Nightly" --notes $notes --prerelease
             if ($LASTEXITCODE -ne 0) { throw "Failed to update the nightly release." }
           } else {
-            gh release create nightly $asset --target "${{ github.sha }}" --title "Dead Space KR 0.1 Nightly" --notes $notes --prerelease
+            gh release create nightly $asset --target "${{ github.sha }}" --title "Dead Space KR 0.2 Nightly" --notes $notes --prerelease
             if ($LASTEXITCODE -ne 0) { throw "Failed to create the nightly release." }
           }

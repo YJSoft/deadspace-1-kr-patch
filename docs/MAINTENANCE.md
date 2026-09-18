@@ -47,7 +47,7 @@
    - NSIS 라이선스
    - VPatch zlib
 10. DLL과 완성 STR는 Git 소스 브랜치에 커밋하지 않는다. 배포는 CI가 생성한
-   `DeadSpace1-KR-0.1.exe`를 사용한다.
+   `DeadSpace1-KR-0.2.exe`를 사용한다.
 
 ## 장애 진단 자료
 

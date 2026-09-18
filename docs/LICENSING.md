@@ -5,7 +5,7 @@
 ## 제3자 구성 요소
 
 - DeadSpace2008Fixes: MIT, 기준 revision
-  `ec7ae5cdb799af5494e483cb3357b897d8fe9fe1`
+  `975836ed1c7de5fd447d3694324fecdc870c8719`
 - MinHook: BSD 2-Clause
 - SDL3: zlib License
 - NanumBarunGothic: SIL Open Font License 1.1

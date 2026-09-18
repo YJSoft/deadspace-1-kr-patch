@@ -29,6 +29,7 @@ cl.exe /nologo /LD /MT /O2 /Oi /GS /Gy /EHsc /std:c++20 /permissive- /utf-8 /W3 
   "%UPSTREAM%\Fixes\Save\SafeStringHandling.cpp" ^
   "%UPSTREAM%\Fixes\UI\LoadingScreen.cpp" ^
   "%UPSTREAM%\Patches\Gameplay\IntroCutscene.cpp" ^
+  "%UPSTREAM%\Patches\Gameplay\SkipVideos.cpp" ^
   "%UPSTREAM%\Patches\System\BorderlessWindow.cpp" ^
   "%UPSTREAM%\Patches\System\Telemetry.cpp" ^
   "%UPSTREAM%\Patches\UI\MainIntro.cpp" ^
