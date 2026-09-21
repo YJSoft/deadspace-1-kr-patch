@@ -1,6 +1,6 @@
 # Dead Space 1 한국어 개선 패치
 
-Steam 및 EA App판 **Dead Space (2008)**의 실행 파일을 교체하지 않고 한국어 UTF-8
+Steam 및 EA App판 <strong>Dead Space (2008)</strong>의 실행 파일을 교체하지 않고 한국어 UTF-8
 표시, ID 기반 번역, 통합 글꼴, 자동 자막 배율 및 여러 원작 버그 수정을 적용하는
 프로젝트다.
 
@@ -113,7 +113,7 @@ CSV의 `id`와 `english`는 유지하고 `translation`만 수정한다. CSV는 U
 - Steam판 Dead Space (2008) `1.0.0.222`
 - EA App판 Dead Space (2008), 실행 파일 `1.0.0.222`
 - 32비트 Windows 실행 파일
-- UTF-8 1~3바이트와 BMP(`U+0000`~`U+FFFF`)
+- UTF-8 1\~3바이트와 BMP(`U+0000`\~`U+FFFF`)
 
 다른 실행 파일 버전이나 크랙/수정 EXE는 지원하지 않는다. 시그니처를 찾더라도 예상
 바이트 검증을 우회해서는 안 된다.
