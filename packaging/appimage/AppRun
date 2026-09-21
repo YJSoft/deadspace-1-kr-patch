@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+APPDIR="${APPDIR:-$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)}"
+export DS1K_RESOURCE_DIR="$APPDIR/usr/share/deadspace1-kr"
+exec "$APPDIR/usr/bin/deadspace1-kr-installer" "$@"

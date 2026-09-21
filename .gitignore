@@ -3,6 +3,9 @@
 build/
 dist/
 release/
+linux-installer/target/
+build/appimage/
+*.AppImage
 Debug/
 Release/
 x64/

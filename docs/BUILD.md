@@ -162,23 +162,53 @@ $nsisRoot = .\scripts\prepare-nsis.ps1
 최초 설치, 기존판 업그레이드, 설정 보존, 백업 손실 시 무변경 중단, 원본 복원
 후 백업 재구성, 제거 및 원본 해시 복원을 모두 확인한다.
 
-## 8. GitHub Actions 빌드
+## 8. Linux AppImage 빌드
+
+Linux x86_64에서는 Rust stable과 FLTK 링크용 개발 패키지가 필요하다. Ubuntu에서는
+다음 패키지 조합으로 빌드할 수 있다.
+
+```bash
+sudo apt install build-essential cmake ninja-build pkg-config \
+  libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev \
+  libxrender-dev libxfixes-dev libpango1.0-dev libfontconfig1-dev \
+  libgl1-mesa-dev
+```
+
+먼저 Windows 빌드에서 생성된 `ds1k_utf8.dll`, `xinput1_3.dll`, `SDL3.dll`을
+`dist/`에 둔다. 검증한 x86_64 `appimagetool`과 AppImage type-2 runtime을 각각
+`build/appimage/appimagetool-x86_64.AppImage`, `build/appimage/runtime-x86_64`에
+둔 뒤 실행한다.
+
+```bash
+cargo test --manifest-path linux-installer/Cargo.toml --locked
+DS1K_GIT_HASH=$(git rev-parse --short=8 HEAD) ./scripts/build-appimage.sh
+```
+
+결과는 `dist/DeadSpace1-KR-0.2-x86_64.AppImage`다. 설치기는 Steam 라이브러리를
+자동 탐색하며 수동 폴더 선택도 지원한다. 설치 후 GUI의 `옵션 복사` 버튼으로
+`WINEDLLOVERRIDES="xinput1_3=n,b" %command%`를 Steam 실행 옵션에 넣어야 한다.
+
+AppImage를 Wine이나 Proton으로 실행하지 않는다. Linux에서 직접 실행해 게임 폴더에
+Windows 런타임 DLL과 즉석 생성한 STR를 설치한다.
+
+## 9. GitHub Actions 빌드
 
 `.github/workflows/build-dist.yml`은 저장소에 push된 모든 커밋과 pull request에서
-Windows Server 2022 빌드를 수행한다. SDL 3.2.8 공식 Visual C++ 개발 패키지는 고정된
-URL과 SHA-256으로 검증한 뒤 사용한다.
+Windows Server 2022와 Ubuntu 빌드를 수행한다. SDL 3.2.8 공식 Visual C++ 개발
+패키지는 고정된 URL과 SHA-256으로 검증한 뒤 사용한다.
 
 CI는 고정 URL과 SHA-256으로 NSIS 3.12도 검증해 준비한 뒤 설치 마법사를 만든다.
-결과는 `actions/upload-artifact@v7`의 단일 파일 모드(`archive: false`)로 업로드하므로
-artifact 자체가 ZIP이 아닌 다음 실행 파일 하나다.
+결과는 `actions/upload-artifact@v7`의 단일 파일 모드(`archive: false`)로 각각
+업로드하므로 사용자용 artifact 자체가 ZIP이 아닌 다음 실행 파일이다.
 
 ```text
 DeadSpace1-KR-0.2.exe
+DeadSpace1-KR-0.2-x86_64.AppImage
 ```
 
 설치 파일에는 DLL, 기본 설정, 문서, 라이선스와 VPatch 차등 데이터가 들어간다. 게임
 원본이나 완성된 STR는 포함하지 않으며, 사용자의 지원되는 Steam 또는 EA App 원본
 STR가 있어야 설치를 완료할 수 있다. `main` 브랜치 push 빌드가 성공하면 CI는 `nightly`
-프리릴리스의 `DeadSpace1-KR-0.2.exe` 자산도 같은 파일로 교체한다. README의 고정
-주소는 이 릴리스 자산을 가리킨다. nightly.link는 현재 `archive: false` 비압축
+프리릴리스의 Windows EXE와 Linux AppImage 자산도 같은 이름으로 교체한다. README의
+고정 주소는 이 릴리스 자산을 가리킨다. nightly.link는 현재 `archive: false` 비압축
 artifact를 지원하지 않는다.

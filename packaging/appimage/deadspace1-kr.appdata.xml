@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>kr.yjsoft.deadspace1-kr-installer</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <name>Dead Space 1 KR Installer</name>
+  <name xml:lang="ko">Dead Space 1 한국어 패치 설치기</name>
+  <summary>Install the Korean improvement patch for Dead Space (2008)</summary>
+  <summary xml:lang="ko">Dead Space (2008) 한국어 개선 패치 설치 및 제거</summary>
+  <developer id="kr.yjsoft">
+    <name>YJSoft</name>
+  </developer>
+  <description>
+    <p>Validates supported Steam game resources, preserves the originals, and installs or removes Dead Space KR 0.2.</p>
+    <p xml:lang="ko">지원되는 Steam 원본을 검증하고 백업한 뒤 Dead Space KR 0.2를 설치하거나 제거합니다.</p>
+  </description>
+  <launchable type="desktop-id">kr.yjsoft.deadspace1-kr-installer.desktop</launchable>
+  <url type="homepage">https://github.com/YJSoft/deadspace-1-kr-patch</url>
+  <releases>
+    <release version="0.2" date="2026-09-21"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

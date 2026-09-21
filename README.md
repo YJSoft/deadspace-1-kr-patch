@@ -37,7 +37,8 @@ STR에 저장소의 VPatch 차등 데이터를 적용해 한국어 STR를 설치
 | `translations/` | 현재 번역과 초기 가져오기 스냅샷 |
 | `assets/fonts/` | 글꼴 자산 생성에 사용하는 나눔바른고딕 원본 입력 파일 |
 | `config/` | `DeadSpaceFixes.ini` 설정 예제 |
-| `packaging/` | NSIS 설치 마법사와 원본 STR용 VPatch 차등 데이터 |
+| `linux-installer/` | AppImage GUI 설치기와 Linux용 VPatch 적용 코드 |
+| `packaging/` | NSIS/AppImage 패키징과 원본 STR용 VPatch 차등 데이터 |
 | `docs/` | 빌드, 구조, 유지보수, 테스트 및 설치 설명 |
 
 ## 문서
@@ -48,6 +49,7 @@ STR에 저장소의 VPatch 차등 데이터를 적용해 한국어 STR를 설치
 - [회귀 테스트 체크리스트](docs/TESTING.md)
 - [번역 편집 안내](translations/README.md)
 - [테스트 배포판 설치·설정 안내](docs/INSTALL_KO.txt)
+- [Linux/Steam Deck 설치 안내](docs/INSTALL_LINUX_KO.md)
 - [라이선스 경계](docs/LICENSING.md)
 
 ## 빠른 시작
@@ -63,21 +65,33 @@ build-assets.cmd
 `build.cmd`는 `ds1k_utf8.dll`, DeadSpaceFixes 기반 `xinput1_3.dll`과 SDL3 런타임을
 `dist/`에 모은다. `dist/`는 빌드 산출물이므로 Git에서 제외된다.
 
-GitHub Actions도 push된 모든 커밋과 pull request를 Windows 환경에서 빌드하고
-`DeadSpace1-KR-0.2.exe` 한 파일을 artifact로 업로드한다. 설치기는 경로 선택과 원본
-검증을 거치는 마법사 방식이며, 원본 STR를 백업한 뒤 한국어 STR를 즉석 생성한다.
+GitHub Actions도 push된 모든 커밋과 pull request에서 Windows 설치 EXE와 Linux
+x86_64 AppImage를 빌드해 각각 단일 파일 artifact로 업로드한다. 두 설치기 모두 경로
+선택과 원본 검증을 거치는 GUI 방식이며, 원본 STR를 백업한 뒤 한국어 STR를 즉석
+생성한다.
 기존 설치를 발견하면 저장된 원본으로 복원 후 재패치하며, 설치 커밋을 파일과 제거
-레지스트리에 기록한다. 백업이 없거나 손상되면 게임 클라이언트의 원본 복원을 안내하고
-변경 없이 중단한다.
+정보에 기록한다(Windows판은 제거 레지스트리에도 기록). 백업이 없거나 손상되면 게임
+클라이언트의 원본 복원을 안내하고 변경 없이 중단한다.
 
 `main` 브랜치 최신 성공 설치 파일은 다음 고정 주소에서 바로 받을 수 있다. CI가
 성공할 때마다 `nightly` 프리릴리스의 같은 이름 자산을 교체한다.
 
 https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.2.exe
 
-GitHub Actions의 실행별 artifact도 ZIP 없는 단일 EXE로 유지한다. nightly.link는 현재
-`archive: false` 비압축 artifact를 지원하지 않으므로 고정 링크는 GitHub Release
-자산을 사용한다.
+Linux/Steam Deck용 고정 주소:
+
+https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.2-x86_64.AppImage
+
+Linux판은 설치 후 Steam 실행 옵션에 다음 값을 넣어야 한다. AppImage 설치 화면의
+`옵션 복사` 버튼으로 그대로 복사할 수 있다.
+
+```text
+WINEDLLOVERRIDES="xinput1_3=n,b" %command%
+```
+
+GitHub Actions의 사용자용 artifact는 ZIP 없는 단일 EXE 또는 AppImage로 유지한다.
+nightly.link는 현재 `archive: false` 비압축 artifact를 지원하지 않으므로 고정 링크는
+GitHub Release 자산을 사용한다.
 
 과거 게임 폴더 안에서 사용하던 `ds1k-prototype` 작업 디렉터리는 현재 빌드나 설치에
 참조되지 않는다. 순정 게임에 CI 설치 파일을 시험할 때는 이 저장소와 설치 EXE만 있으면

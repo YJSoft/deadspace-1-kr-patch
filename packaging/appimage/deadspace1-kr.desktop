@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Dead Space 1 KR Installer
+Name[ko]=Dead Space 1 한국어 패치 설치기
+Comment=Install or remove the Dead Space (2008) Korean patch
+Comment[ko]=Dead Space (2008) 한국어 개선 패치 설치 및 제거
+Exec=deadspace1-kr-installer
+Icon=deadspace1-kr
+Terminal=false
+Categories=Game;

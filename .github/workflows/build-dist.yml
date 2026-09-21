@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-2022
     timeout-minutes: 20
 
@@ -50,32 +50,153 @@ jobs:
         shell: pwsh
         run: .\scripts\build-installer.ps1 -NsisRoot $env:NSIS_ROOT -GitHash "${{ steps.version.outputs.short_sha }}"
 
-      - name: Upload standalone installer
+      - name: Upload standalone Windows installer
         uses: actions/upload-artifact@v7
         with:
+          name: DeadSpace1-KR-0.2-Windows
           path: dist/DeadSpace1-KR-0.2.exe
           if-no-files-found: error
           retention-days: 30
           archive: false
 
+      - name: Upload Linux runtime inputs
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-runtime-inputs
+          path: |
+            dist/ds1k_utf8.dll
+            dist/xinput1_3.dll
+            dist/SDL3.dll
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload Windows release input
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-windows
+          path: dist/DeadSpace1-KR-0.2.exe
+          if-no-files-found: error
+          retention-days: 1
+
+  build-linux:
+    needs: build-windows
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Download Windows runtime files
+        uses: actions/download-artifact@v8
+        with:
+          name: linux-runtime-inputs
+          path: dist
+
+      - name: Install Linux build dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build pkg-config file \
+            libx11-dev libxext-dev libxft-dev libxinerama-dev \
+            libxcursor-dev libxrender-dev libxfixes-dev \
+            libpango1.0-dev libfontconfig1-dev libgl1-mesa-dev
+
+      - name: Test Linux installer core
+        shell: bash
+        run: cargo test --manifest-path linux-installer/Cargo.toml --locked
+
+      - name: Download verified appimagetool
+        shell: bash
+        run: |
+          mkdir -p build/appimage
+          curl --fail --location --retry 3 \
+            --output build/appimage/appimagetool-x86_64.AppImage \
+            https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+          echo "ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0  build/appimage/appimagetool-x86_64.AppImage" | sha256sum --check
+          chmod +x build/appimage/appimagetool-x86_64.AppImage
+          curl --fail --location --retry 3 \
+            --output build/appimage/runtime-x86_64 \
+            https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64
+          echo "1cc49bcf1e2ccd593c379adb17c9f85a36d619088296504de95b1d06215aebbf  build/appimage/runtime-x86_64" | sha256sum --check
+
+      - name: Build AppImage
+        shell: bash
+        env:
+          DS1K_GIT_HASH: ${{ github.sha }}
+        run: ./scripts/build-appimage.sh
+
+      - name: Smoke-test AppImage
+        shell: bash
+        run: |
+          ./dist/DeadSpace1-KR-0.2-x86_64.AppImage --appimage-extract-and-run --version
+          ./dist/DeadSpace1-KR-0.2-x86_64.AppImage --appimage-extract-and-run --verify-resources
+
+      - name: Upload standalone Linux installer
+        uses: actions/upload-artifact@v7
+        with:
+          name: DeadSpace1-KR-0.2-Linux-x86_64
+          path: dist/DeadSpace1-KR-0.2-x86_64.AppImage
+          if-no-files-found: error
+          retention-days: 30
+          archive: false
+
+      - name: Upload Linux release input
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-linux
+          path: dist/DeadSpace1-KR-0.2-x86_64.AppImage
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-nightly:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Download Windows release input
+        uses: actions/download-artifact@v8
+        with:
+          name: release-windows
+          path: release
+
+      - name: Download Linux release input
+        uses: actions/download-artifact@v8
+        with:
+          name: release-linux
+          path: release
+
       - name: Publish rolling nightly release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        shell: pwsh
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          $asset = "dist/DeadSpace1-KR-0.2.exe"
-          $notes = "main 브랜치 최신 자동 빌드입니다.`n`n커밋: ${{ github.sha }}`n`n번역 검수용 버전이므로 테스트 전 원본 세이브를 별도로 보관하십시오."
+          windows_asset="release/DeadSpace1-KR-0.2.exe"
+          linux_asset="release/DeadSpace1-KR-0.2-x86_64.AppImage"
+          notes=$(cat <<'EOF'
+          main 브랜치 최신 자동 빌드입니다.
 
-          gh release view nightly --json tagName *> $null
-          if ($LASTEXITCODE -eq 0) {
-            gh release delete-asset nightly "DeadSpace1-KR-0.1.exe" -y 2> $null
-            gh release upload nightly $asset --clobber
-            if ($LASTEXITCODE -ne 0) { throw "Failed to replace the nightly release asset." }
-            gh release edit nightly --title "Dead Space KR 0.2 Nightly" --notes $notes --prerelease
-            if ($LASTEXITCODE -ne 0) { throw "Failed to update the nightly release." }
-          } else {
-            gh release create nightly $asset --target "${{ github.sha }}" --title "Dead Space KR 0.2 Nightly" --notes $notes --prerelease
-            if ($LASTEXITCODE -ne 0) { throw "Failed to create the nightly release." }
-          }
+          - Windows: `DeadSpace1-KR-0.2.exe`
+          - Linux/Steam Deck: `DeadSpace1-KR-0.2-x86_64.AppImage`
+
+          커밋: ${{ github.sha }}
+
+          Linux판은 설치 완료 화면에서 Steam 실행 옵션을 복사해 적용해야 합니다.
+          번역 검수용 버전이므로 테스트 전 원본 세이브를 별도로 보관하십시오.
+          EOF
+          )
+
+          if gh release view nightly --json tagName >/dev/null 2>&1; then
+            gh release delete-asset nightly "DeadSpace1-KR-0.1.exe" -y 2>/dev/null || true
+            gh release upload nightly "$windows_asset" "$linux_asset" --clobber
+            gh release edit nightly --title "Dead Space KR 0.2 Nightly" \
+              --notes "$notes" --prerelease --target "${{ github.sha }}"
+          else
+            gh release create nightly "$windows_asset" "$linux_asset" \
+              --target "${{ github.sha }}" --title "Dead Space KR 0.2 Nightly" \
+              --notes "$notes" --prerelease
+          fi

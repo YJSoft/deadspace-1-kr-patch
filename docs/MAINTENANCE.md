@@ -30,6 +30,8 @@
    검토한다.
 3. NSIS 설치 마법사를 빌드하고 Steam 및 EA App 원본 파일을 복사한 각 격리
    폴더에서 설치한다.
+   Linux x86_64 AppImage도 빌드해 `--version`, `--verify-resources`와 GUI 실행을
+   확인하고, Linux Steam 원본 폴더에서 설치·업데이트·제거를 검증한다.
 4. 같은 폴더에 업그레이드하여 백업 원본 복원 후 재패치, 사용자 설정 유지와 새
    `BuildCommit` 기록을 확인한다.
    버전명이 붙은 기존 백업 폴더는 `DS1K_Backup`으로 이름만 변경되는지 확인한다.
@@ -47,7 +49,7 @@
    - NSIS 라이선스
    - VPatch zlib
 10. DLL과 완성 STR는 Git 소스 브랜치에 커밋하지 않는다. 배포는 CI가 생성한
-   `DeadSpace1-KR-0.2.exe`를 사용한다.
+   `DeadSpace1-KR-0.2.exe` 또는 `DeadSpace1-KR-0.2-x86_64.AppImage`를 사용한다.
 
 ## 장애 진단 자료
 

@@ -1,0 +1,12 @@
+FLTK License notice
+
+The Linux AppImage installer is based in part on the work of the FLTK project:
+https://www.fltk.org
+
+FLTK is distributed under the GNU Library General Public License version 2
+with the FLTK exceptions. Those exceptions explicitly permit static linking
+without requiring the application source or relinkable object files and state
+that linked programs need only identify their use of FLTK.
+
+The authoritative license and exception text is available at:
+https://github.com/fltk/fltk/blob/master/COPYING

@@ -16,3 +16,8 @@ The complete applicable license notices are included under third_party:
 
 The Windows installer is built with NSIS and uses the bundled VPatch plug-in
 to generate patched STR files from a user's supported original game files.
+
+The Linux AppImage GUI is based in part on the work of the FLTK project
+(https://www.fltk.org) through fltk-rs. It embeds the AppImage type-2 runtime.
+Applicable notices and the locked Rust dependency inventory are included in
+third_party/licenses and linux-installer/RUST_DEPENDENCIES.md.

@@ -11,9 +11,14 @@
 - NanumBarunGothic: SIL Open Font License 1.1
 - NSIS 3.12: zlib/libpng 계열 및 포함 구성 요소별 라이선스
 - VPatch: zlib License
+- fltk-rs: MIT
+- FLTK: GNU Library GPL 2.0과 FLTK 정적 링크 예외
+- AppImage type-2 runtime: MIT 및 런타임에 포함된 구성 요소별 라이선스
 
 전문은 `third_party/` 아래에 보존한다. 배포 바이너리를 만들 때도 해당 고지와 전문을
 함께 제공해야 한다.
+Linux 설치기의 잠긴 Rust 의존성 목록은 `linux-installer/RUST_DEPENDENCIES.md`에
+기록한다.
 
 ## 프로젝트 고유 코드와 번역
 
