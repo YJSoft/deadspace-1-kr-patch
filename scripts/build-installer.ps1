@@ -21,7 +21,7 @@ if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
 
 $makeNsis = Join-Path $NsisRoot "makensis.exe"
 $script = Join-Path $repoRoot "packaging\installer.nsi"
-$patch = Join-Path $repoRoot "packaging\patches\deadspace1-kr-v0.2.pat"
+$patch = Join-Path $repoRoot "packaging\patches\deadspace1-kr-v0.3.pat"
 $required = @(
     $makeNsis,
     $script,
@@ -48,7 +48,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "makensis failed with exit code $LASTEXITCODE."
 }
 
-$installer = Join-Path $outputFull "DeadSpace1-KR-0.2.exe"
+$installer = Join-Path $outputFull "DeadSpace1-KR-0.3.exe"
 if (-not (Test-Path -LiteralPath $installer)) {
     throw "makensis did not create the expected installer: $installer"
 }

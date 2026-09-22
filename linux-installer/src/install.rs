@@ -11,7 +11,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-pub const VERSION: &str = "0.2";
+pub const VERSION: &str = "0.3";
 pub const LAUNCH_OPTION: &str = r#"WINEDLLOVERRIDES="xinput1_3=n,b" %command%"#;
 
 const FONT_REL: &str = "text_assets/text_assets_global.str";
@@ -71,7 +71,7 @@ impl Resources {
     pub fn from_root(root: PathBuf) -> Result<Self> {
         let required = [
             "patches/manifest.json",
-            "patches/deadspace1-kr-v0.2.pat",
+            "patches/deadspace1-kr-v0.3.pat",
             "runtime/ds1k_utf8.dll",
             "runtime/xinput1_3.dll",
             "runtime/SDL3.dll",

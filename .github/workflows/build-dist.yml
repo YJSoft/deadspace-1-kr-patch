@@ -54,8 +54,8 @@ jobs:
       - name: Upload standalone Windows installer
         uses: actions/upload-artifact@v7
         with:
-          name: DeadSpace1-KR-0.2-Windows
-          path: dist/DeadSpace1-KR-0.2.exe
+          name: DeadSpace1-KR-0.3-Windows
+          path: dist/DeadSpace1-KR-0.3.exe
           if-no-files-found: error
           retention-days: 30
           archive: false
@@ -75,7 +75,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: release-windows
-          path: dist/DeadSpace1-KR-0.2.exe
+          path: dist/DeadSpace1-KR-0.3.exe
           if-no-files-found: error
           retention-days: 1
 
@@ -131,14 +131,14 @@ jobs:
       - name: Smoke-test AppImage
         shell: bash
         run: |
-          ./dist/DeadSpace1-KR-0.2-x86_64.AppImage --appimage-extract-and-run --version
-          ./dist/DeadSpace1-KR-0.2-x86_64.AppImage --appimage-extract-and-run --verify-resources
+          ./dist/DeadSpace1-KR-0.3-x86_64.AppImage --appimage-extract-and-run --version
+          ./dist/DeadSpace1-KR-0.3-x86_64.AppImage --appimage-extract-and-run --verify-resources
 
       - name: Upload standalone Linux installer
         uses: actions/upload-artifact@v7
         with:
-          name: DeadSpace1-KR-0.2-Linux-x86_64
-          path: dist/DeadSpace1-KR-0.2-x86_64.AppImage
+          name: DeadSpace1-KR-0.3-Linux-x86_64
+          path: dist/DeadSpace1-KR-0.3-x86_64.AppImage
           if-no-files-found: error
           retention-days: 30
           archive: false
@@ -147,7 +147,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: release-linux
-          path: dist/DeadSpace1-KR-0.2-x86_64.AppImage
+          path: dist/DeadSpace1-KR-0.3-x86_64.AppImage
           if-no-files-found: error
           retention-days: 1
 
@@ -179,13 +179,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          windows_asset="release/DeadSpace1-KR-0.2.exe"
-          linux_asset="release/DeadSpace1-KR-0.2-x86_64.AppImage"
+          windows_asset="release/DeadSpace1-KR-0.3.exe"
+          linux_asset="release/DeadSpace1-KR-0.3-x86_64.AppImage"
           notes=$(cat <<'EOF'
           main 브랜치 최신 자동 빌드입니다.
 
-          - Windows: `DeadSpace1-KR-0.2.exe`
-          - Linux/Steam Deck: `DeadSpace1-KR-0.2-x86_64.AppImage`
+          - Windows: `DeadSpace1-KR-0.3.exe`
+          - Linux/Steam Deck: `DeadSpace1-KR-0.3-x86_64.AppImage`
+
+          0.3은 실제 렌더 높이를 기준으로 자막 사전 레이아웃과 최종 그리기 배율을
+          함께 보정해 4K 및 Windows 고DPI 환경의 작은 자막 문제를 수정합니다.
+
+          이전 버전 설치 파일은 이 릴리스에서 삭제하지 않습니다.
 
           커밋: ${{ github.sha }}
 
@@ -195,12 +200,11 @@ jobs:
           )
 
           if gh release view nightly --json tagName >/dev/null 2>&1; then
-            gh release delete-asset nightly "DeadSpace1-KR-0.1.exe" -y 2>/dev/null || true
             gh release upload nightly "$windows_asset" "$linux_asset" --clobber
-            gh release edit nightly --title "Dead Space KR 0.2 Nightly" \
+            gh release edit nightly --title "Dead Space KR 0.3 Nightly" \
               --notes "$notes" --prerelease --target "${{ github.sha }}"
           else
             gh release create nightly "$windows_asset" "$linux_asset" \
-              --target "${{ github.sha }}" --title "Dead Space KR 0.2 Nightly" \
+              --target "${{ github.sha }}" --title "Dead Space KR 0.3 Nightly" \
               --notes "$notes" --prerelease
           fi

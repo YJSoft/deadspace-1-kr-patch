@@ -2,12 +2,18 @@ DS1K test build includes and modifies code from DeadSpace2008Fixes:
 https://github.com/seamusduncmcgrath/DeadSpace2008Fixes
 Upstream revision: 975836ed1c7de5fd447d3694324fecdc870c8719
 
+The full subtitle layout/draw scaling design and signatures are adapted from
+DSOpt by Luminous:
+https://github.com/Kanadeforever/DSOpt
+Used under the MIT License.
+
 It also redistributes SDL3.dll and embeds MinHook through that project.
 The generated game font atlases use NanumBarunGothic Regular, Copyright (c)
 2010 NAVER Corporation, under the SIL Open Font License 1.1.
 The complete applicable license notices are included under third_party:
 
 - DeadSpace2008Fixes/LICENSE
+- licenses/DSOpt-MIT.txt
 - licenses/MinHook-BSD-2-Clause.txt
 - licenses/SDL3-zlib.txt
 - NanumBarunGothic/OFL-1.1.txt

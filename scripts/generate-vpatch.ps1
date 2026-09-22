@@ -25,7 +25,7 @@ if ([string]::IsNullOrWhiteSpace($TargetLocalization)) {
     $TargetLocalization = Join-Path $repoRoot "dist\text_assets\text\D8CBB618.str"
 }
 if ([string]::IsNullOrWhiteSpace($OutputPatch)) {
-    $OutputPatch = Join-Path $repoRoot "packaging\patches\deadspace1-kr-v0.2.pat"
+    $OutputPatch = Join-Path $repoRoot "packaging\patches\deadspace1-kr-v0.3.pat"
 }
 
 $sources = @(
@@ -112,7 +112,7 @@ foreach ($path in @($TargetTextAssets, $TargetLocalization)) {
 }
 
 $workRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("ds1k-vpatch-{0}" -f [guid]::NewGuid().ToString("N"))
-$workPatch = Join-Path $workRoot "deadspace1-kr-v0.2.pat"
+$workPatch = Join-Path $workRoot "deadspace1-kr-v0.3.pat"
 New-Item -ItemType Directory -Path $workRoot | Out-Null
 
 try {
@@ -136,7 +136,7 @@ try {
     $manifest = [ordered]@{
         format = 2
         patch = [ordered]@{
-            file = "deadspace1-kr-v0.2.pat"
+            file = "deadspace1-kr-v0.3.pat"
             sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $OutputPatch).Hash
         }
         inputs = @($sources | ForEach-Object {

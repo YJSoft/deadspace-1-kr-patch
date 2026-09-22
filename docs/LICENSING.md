@@ -6,6 +6,7 @@
 
 - DeadSpace2008Fixes: MIT, 기준 revision
   `975836ed1c7de5fd447d3694324fecdc870c8719`
+- DSOpt: MIT, 자막 전체 레이아웃·그리기 배율 설계와 시그니처 참고
 - MinHook: BSD 2-Clause
 - SDL3: zlib License
 - NanumBarunGothic: SIL Open Font License 1.1

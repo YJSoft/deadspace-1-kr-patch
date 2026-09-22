@@ -1,6 +1,6 @@
 # STR VPatch 데이터
 
-`deadspace1-kr-v0.2.pat`는 Steam 및 EA App판 Dead Space (2008)의 원본 리소스를
+`deadspace1-kr-v0.3.pat`는 Steam 및 EA App판 Dead Space (2008)의 원본 리소스를
 한국어 패치 리소스로 변환하는 VPatch 데이터다. 원본 또는 완성 STR 자체는 저장소와
 설치 파일에 포함하지 않는다. Steam판에서는 `12F4D5F8.str`, EA App판에서는 기존
 영어 `D8CBB618.str`를 입력으로 받아 패치용 `D8CBB618.str`를 만든다.

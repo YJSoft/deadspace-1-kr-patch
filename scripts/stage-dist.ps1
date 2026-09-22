@@ -18,6 +18,7 @@ Copy-Item -LiteralPath (Join-Path $repoRoot "config\DeadSpaceFixes.ini") -Destin
 Copy-Item -LiteralPath (Join-Path $repoRoot "docs\INSTALL_KO.txt") -Destination (Join-Path $dist "README_KO.txt") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "THIRD_PARTY_NOTICES.txt") -Destination $dist -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "third_party\DeadSpace2008Fixes\LICENSE") -Destination (Join-Path $licenses "DeadSpace2008Fixes-MIT.txt") -Force
+Copy-Item -LiteralPath (Join-Path $repoRoot "third_party\licenses\DSOpt-MIT.txt") -Destination $licenses -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "third_party\licenses\MinHook-BSD-2-Clause.txt") -Destination $licenses -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "third_party\licenses\SDL3-zlib.txt") -Destination $licenses -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "third_party\NanumBarunGothic\OFL-1.1.txt") -Destination (Join-Path $licenses "NanumBarunGothic-OFL-1.1.txt") -Force

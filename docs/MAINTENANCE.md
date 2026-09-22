@@ -43,13 +43,17 @@
 8. 실제 게임에서 `docs/TESTING.md`의 기본/회귀 항목을 실행한다.
 9. 다음 라이선스 전문을 설치 파일에 넣는다.
    - DeadSpace2008Fixes MIT
+   - DSOpt MIT
    - MinHook BSD 2-Clause
    - SDL zlib
    - NanumBarunGothic SIL OFL 1.1
    - NSIS 라이선스
    - VPatch zlib
 10. DLL과 완성 STR는 Git 소스 브랜치에 커밋하지 않는다. 배포는 CI가 생성한
-   `DeadSpace1-KR-0.2.exe` 또는 `DeadSpace1-KR-0.2-x86_64.AppImage`를 사용한다.
+   `DeadSpace1-KR-0.3.exe` 또는 `DeadSpace1-KR-0.3-x86_64.AppImage`를 사용한다.
+
+`nightly` 릴리스에 이미 올라간 이전 버전 자산은 삭제하지 않는다. 같은 버전의 최신
+커밋 산출물만 `--clobber`로 교체한다.
 
 ## 장애 진단 자료
 

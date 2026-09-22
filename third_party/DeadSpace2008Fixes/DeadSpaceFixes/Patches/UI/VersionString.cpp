@@ -18,7 +18,7 @@ namespace Patches {
 					LOG_DEBUG("[Patches/UI/VersionString]", "Found version number at 0x%p", pVersionString);
 					LOG_DEBUG("[Patches/UI/VersionString]", "Game version is %s", pVersionString);
 
-					const char* customVersion = "Dead Space KR 0.2\n번역 검수용 버전";
+					const char* customVersion = "Dead Space KR 0.3\n번역 검수용 버전";
 
 					DWORD oldProtect;
 					if (VirtualProtect(pVersionString, 100, PAGE_EXECUTE_READWRITE, &oldProtect))

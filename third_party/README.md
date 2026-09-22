@@ -3,6 +3,7 @@
 | 구성 요소 | 저장소 포함 범위 | 라이선스 |
 | --- | --- | --- |
 | DeadSpace2008Fixes | 기준 소스와 DS1K 수정본 | MIT |
+| DSOpt | 자막 전체 레이아웃·그리기 배율 설계와 시그니처 참고 | MIT |
 | MinHook | DeadSpace2008Fixes에 내장된 C 소스/헤더 | BSD 2-Clause |
 | SDL3 3.2.8 | 빌드용 헤더만 포함, LIB/DLL 제외 | zlib |
 | NanumBarunGothic | OFL 전문과 `assets/fonts`의 Regular TTF | SIL OFL 1.1 |

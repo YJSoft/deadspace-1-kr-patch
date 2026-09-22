@@ -147,7 +147,7 @@ $nsisRoot = .\scripts\prepare-nsis.ps1
 이전 배포판에서 바로 업그레이드하기 위한 선택 호환 입력이다.
 
 스크립트는 알려진 Steam·EA App 원본과 레거시 입력 SHA-256을 확인한 뒤 작업한다.
-생성된 `deadspace1-kr-v0.2.pat`와 `manifest.json`을 함께 커밋한다. 원본 또는 완성 STR는
+생성된 `deadspace1-kr-v0.3.pat`와 `manifest.json`을 함께 커밋한다. 원본 또는 완성 STR는
 커밋하지 않는다.
 
 DLL과 배포 파일을 `dist`에 준비한 뒤 설치 마법사를 로컬에서 빌드할 수 있다.
@@ -158,7 +158,7 @@ $nsisRoot = .\scripts\prepare-nsis.ps1
 .\scripts\build-installer.ps1 -NsisRoot $nsisRoot
 ```
 
-출력 파일명은 `DeadSpace1-KR-0.2.exe`다. 새 설치기는 깨끗한 임시 게임 폴더에서
+출력 파일명은 `DeadSpace1-KR-0.3.exe`다. 새 설치기는 깨끗한 임시 게임 폴더에서
 최초 설치, 기존판 업그레이드, 설정 보존, 백업 손실 시 무변경 중단, 원본 복원
 후 백업 재구성, 제거 및 원본 해시 복원을 모두 확인한다.
 
@@ -184,7 +184,7 @@ cargo test --manifest-path linux-installer/Cargo.toml --locked
 DS1K_GIT_HASH=$(git rev-parse --short=8 HEAD) ./scripts/build-appimage.sh
 ```
 
-결과는 `dist/DeadSpace1-KR-0.2-x86_64.AppImage`다. 설치기는 Steam 라이브러리를
+결과는 `dist/DeadSpace1-KR-0.3-x86_64.AppImage`다. 설치기는 Steam 라이브러리를
 자동 탐색하며 수동 폴더 선택도 지원한다. 설치 후 GUI의 `옵션 복사` 버튼으로
 `WINEDLLOVERRIDES="xinput1_3=n,b" %command%`를 Steam 실행 옵션에 넣어야 한다.
 
@@ -202,13 +202,14 @@ CI는 고정 URL과 SHA-256으로 NSIS 3.12도 검증해 준비한 뒤 설치 �
 업로드하므로 사용자용 artifact 자체가 ZIP이 아닌 다음 실행 파일이다.
 
 ```text
-DeadSpace1-KR-0.2.exe
-DeadSpace1-KR-0.2-x86_64.AppImage
+DeadSpace1-KR-0.3.exe
+DeadSpace1-KR-0.3-x86_64.AppImage
 ```
 
 설치 파일에는 DLL, 기본 설정, 문서, 라이선스와 VPatch 차등 데이터가 들어간다. 게임
 원본이나 완성된 STR는 포함하지 않으며, 사용자의 지원되는 Steam 또는 EA App 원본
 STR가 있어야 설치를 완료할 수 있다. `main` 브랜치 push 빌드가 성공하면 CI는 `nightly`
-프리릴리스의 Windows EXE와 Linux AppImage 자산도 같은 이름으로 교체한다. README의
-고정 주소는 이 릴리스 자산을 가리킨다. nightly.link는 현재 `archive: false` 비압축
-artifact를 지원하지 않는다.
+프리릴리스의 Windows EXE와 Linux AppImage 중 현재 버전과 같은 이름의 자산만
+교체한다. 이전 버전 자산은 삭제하지 않는다. README의 고정 주소는 현재 버전 릴리스
+자산을 가리킨다. nightly.link는 현재 `archive: false` 비압축 artifact를 지원하지
+않는다.

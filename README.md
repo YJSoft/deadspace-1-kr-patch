@@ -19,7 +19,8 @@ STR에 저장소의 VPatch 차등 데이터를 적용해 한국어 STR를 설치
   없는 기호뿐인 495개 항목은 원본 바이트를 보존한다.
 - 세 로컬라이제이션 UI 글꼴의 한글·영문·숫자·기호를 나눔바른고딕 Regular로
   통일한다.
-- 720p를 기준으로 실제 게임 창 높이에 따라 자막 영역과 크기를 자동 조절한다.
+- 게임 내부의 실제 렌더 높이를 읽어 720p 기준 자막 레이아웃·줄바꿈·글리프 크기를
+  함께 조절한다. Windows DPI 배율과 관계없이 2160p에서는 3배가 적용된다.
 - Alt+Tab 복귀 시 보더리스 창의 마우스 고정과 시스템 커서 숨김을 복원한다.
 - [DeadSpace2008Fixes](https://github.com/seamusduncmcgrath/DeadSpace2008Fixes)의
   수정 기능을 통합한다.
@@ -74,13 +75,14 @@ x86_64 AppImage를 빌드해 각각 단일 파일 artifact로 업로드한다. �
 클라이언트의 원본 복원을 안내하고 변경 없이 중단한다.
 
 `main` 브랜치 최신 성공 설치 파일은 다음 고정 주소에서 바로 받을 수 있다. CI가
-성공할 때마다 `nightly` 프리릴리스의 같은 이름 자산을 교체한다.
+성공할 때마다 `nightly` 프리릴리스의 현재 버전 자산만 교체한다. 0.2 등 이전 버전
+자산은 새 버전이 올라와도 삭제하지 않는다.
 
-https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.2.exe
+https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.3.exe
 
 Linux/Steam Deck용 고정 주소:
 
-https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.2-x86_64.AppImage
+https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.3-x86_64.AppImage
 
 Linux판은 설치 후 Steam 실행 옵션에 다음 값을 넣어야 한다. AppImage 설치 화면의
 `옵션 복사` 버튼으로 그대로 복사할 수 있다.
@@ -121,8 +123,9 @@ CSV의 `id`와 `english`는 유지하고 `translation`만 수정한다. CSV는 U
 ## 출처와 라이선스
 
 DeadSpace2008Fixes 수정 코드는 upstream revision
-`975836ed1c7de5fd447d3694324fecdc870c8719`을 기준으로 한다. MinHook, SDL3,
-나눔바른고딕을 포함한 제3자 저작물은 각각의 라이선스를 따른다.
+`975836ed1c7de5fd447d3694324fecdc870c8719`을 기준으로 한다. DSOpt의 자막 전체
+배율 처리 설계와 시그니처를 MIT 조건으로 참고했다. MinHook, SDL3, 나눔바른고딕을
+포함한 제3자 저작물은 각각의 라이선스를 따른다.
 
 프로젝트 고유 코드와 번역 데이터에 적용할 저장소 전체 라이선스는 아직 별도로
 선언되지 않았다. 제3자 라이선스가 프로젝트 전체에 자동으로 적용되는 것은 아니다.
