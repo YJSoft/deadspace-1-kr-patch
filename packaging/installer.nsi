@@ -5,8 +5,10 @@ ManifestDPIAware true
 !else
   RequestExecutionLevel admin
 !endif
-SetCompressor /SOLID lzma
-SetCompressorDictSize 32
+; Keep the installer payload uncompressed. Besides making the package easier to
+; inspect, this avoids false positives caused by ML scanners heuristically
+; classifying the SOLID LZMA-packed NSIS executable.
+SetCompress off
 
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
