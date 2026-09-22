@@ -3,7 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 appdir="$repo_root/build/appimage/DeadSpace1-KR.AppDir"
-output="${1:-$repo_root/dist/DeadSpace1-KR-0.3-x86_64.AppImage}"
+output="${1:-$repo_root/dist/DeadSpace1-KR-0.3.1-x86_64.AppImage}"
 appimagetool="${APPIMAGETOOL:-$repo_root/build/appimage/appimagetool-x86_64.AppImage}"
 appimage_runtime="${APPIMAGE_RUNTIME:-$repo_root/build/appimage/runtime-x86_64}"
 
@@ -12,7 +12,7 @@ for required in \
   "$repo_root/dist/xinput1_3.dll" \
   "$repo_root/dist/SDL3.dll" \
   "$repo_root/config/DeadSpaceFixes.ini" \
-  "$repo_root/packaging/patches/deadspace1-kr-v0.3.pat" \
+  "$repo_root/packaging/patches/deadspace1-kr-v0.3.1.pat" \
   "$repo_root/packaging/patches/manifest.json"; do
   if [[ ! -f "$required" ]]; then
     echo "Required build input is missing: $required" >&2
@@ -62,7 +62,7 @@ install -m 0644 "$repo_root/dist/ds1k_utf8.dll" "$appdir/usr/share/deadspace1-kr
 install -m 0644 "$repo_root/dist/xinput1_3.dll" "$appdir/usr/share/deadspace1-kr/runtime/"
 install -m 0644 "$repo_root/dist/SDL3.dll" "$appdir/usr/share/deadspace1-kr/runtime/"
 install -m 0644 "$repo_root/config/DeadSpaceFixes.ini" "$appdir/usr/share/deadspace1-kr/runtime/"
-install -m 0644 "$repo_root/packaging/patches/deadspace1-kr-v0.3.pat" \
+install -m 0644 "$repo_root/packaging/patches/deadspace1-kr-v0.3.1.pat" \
   "$appdir/usr/share/deadspace1-kr/patches/"
 install -m 0644 "$repo_root/packaging/patches/manifest.json" \
   "$appdir/usr/share/deadspace1-kr/patches/"
@@ -98,7 +98,7 @@ install -m 0644 "$repo_root/linux-installer/RUST_DEPENDENCIES.md" \
 
 mkdir -p "$(dirname "$output")"
 rm -f "$output"
-ARCH=x86_64 VERSION=0.3 "$appimagetool" --appimage-extract-and-run \
+ARCH=x86_64 VERSION=0.3.1 "$appimagetool" --appimage-extract-and-run \
   --runtime-file "$appimage_runtime" "$appdir" "$output"
 chmod +x "$output"
 sha256sum "$output"

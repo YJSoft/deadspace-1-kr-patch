@@ -24,6 +24,7 @@ internal static class GenerateTranslationCsv
     private static List<Lh2Entry> ReadLh2(
         string path,
         out int totalCount,
+        out int recoveredNbspCount,
         out int invalidUtf8Count,
         out int singleCharacterCount,
         out int nonMeaningfulCount)
@@ -36,6 +37,7 @@ internal static class GenerateTranslationCsv
 
         int count = checked((int)ReadU32(data, 16));
         totalCount = count;
+        recoveredNbspCount = 0;
         invalidUtf8Count = 0;
         singleCharacterCount = 0;
         nonMeaningfulCount = 0;
@@ -75,9 +77,45 @@ internal static class GenerateTranslationCsv
             }
             catch (DecoderFallbackException)
             {
-                ++invalidUtf8Count;
-                continue;
+                // A small set of otherwise-ASCII English strings uses the
+                // Windows-1252 0xA0 byte as a non-breaking space. Normalize
+                // only that byte and require the result to be valid UTF-8.
+                // This recovers the affected audio-log subtitles without
+                // importing unrelated CP1251/CP1252 text as mojibake.
+                byte[] normalized = new byte[end - stringOffset];
+                Buffer.BlockCopy(data, stringOffset, normalized, 0, normalized.Length);
+                bool replacedNbsp = false;
+                for (int byteIndex = 0; byteIndex < normalized.Length; ++byteIndex)
+                {
+                    if (normalized[byteIndex] == 0xA0)
+                    {
+                        normalized[byteIndex] = 0x20;
+                        replacedNbsp = true;
+                    }
+                }
+
+                if (!replacedNbsp)
+                {
+                    ++invalidUtf8Count;
+                    continue;
+                }
+
+                try
+                {
+                    english = strictUtf8.GetString(normalized);
+                    ++recoveredNbspCount;
+                }
+                catch (DecoderFallbackException)
+                {
+                    ++invalidUtf8Count;
+                    continue;
+                }
             }
+
+            // Keep the reference column easy to edit and compare. The game
+            // uses 0xA0 together with an ordinary space in several sentences;
+            // retain the spacing but represent it with portable ASCII spaces.
+            english = english.Replace('\u00A0', ' ');
 
             string trimmed = english.Trim();
             if (trimmed.Length <= 1)
@@ -108,6 +146,128 @@ internal static class GenerateTranslationCsv
             });
         }
         return entries;
+    }
+
+    private static List<string[]> ReadCsvRecords(string path)
+    {
+        string text = File.ReadAllText(path, Encoding.UTF8);
+        var records = new List<string[]>();
+        var record = new List<string>();
+        var field = new StringBuilder();
+        bool quoted = false;
+
+        for (int index = 0; index < text.Length; ++index)
+        {
+            char character = text[index];
+            if (quoted)
+            {
+                if (character == '"')
+                {
+                    if (index + 1 < text.Length && text[index + 1] == '"')
+                    {
+                        field.Append('"');
+                        ++index;
+                    }
+                    else
+                    {
+                        quoted = false;
+                    }
+                }
+                else
+                {
+                    field.Append(character);
+                }
+                continue;
+            }
+
+            if (character == '"' && field.Length == 0)
+            {
+                quoted = true;
+            }
+            else if (character == ',')
+            {
+                record.Add(field.ToString());
+                field.Clear();
+            }
+            else if (character == '\r' || character == '\n')
+            {
+                if (character == '\r' && index + 1 < text.Length && text[index + 1] == '\n')
+                {
+                    ++index;
+                }
+                record.Add(field.ToString());
+                field.Clear();
+                records.Add(record.ToArray());
+                record.Clear();
+            }
+            else
+            {
+                field.Append(character);
+            }
+        }
+
+        if (quoted)
+        {
+            throw new InvalidDataException("Unterminated quoted CSV field.");
+        }
+        if (field.Length > 0 || record.Count > 0)
+        {
+            record.Add(field.ToString());
+            records.Add(record.ToArray());
+        }
+        return records;
+    }
+
+    private static uint ParseTranslationId(string text)
+    {
+        string value = text.Trim();
+        if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+        {
+            return uint.Parse(value.Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+        }
+        return uint.Parse(value, NumberStyles.Integer, CultureInfo.InvariantCulture);
+    }
+
+    private static Dictionary<uint, string> ReadExistingTranslations(string path)
+    {
+        List<string[]> records = ReadCsvRecords(path);
+        if (records.Count == 0 ||
+            records[0].Length != 3 ||
+            !String.Equals(records[0][0].TrimStart('\uFEFF'), "id", StringComparison.OrdinalIgnoreCase) ||
+            !String.Equals(records[0][1], "english", StringComparison.OrdinalIgnoreCase) ||
+            !String.Equals(records[0][2], "translation", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException("Existing CSV header must be: id,english,translation");
+        }
+
+        var translations = new Dictionary<uint, string>();
+        for (int row = 1; row < records.Count; ++row)
+        {
+            string[] fields = records[row];
+            if (fields.Length == 1 && fields[0].Length == 0)
+            {
+                continue;
+            }
+            if (fields.Length != 3)
+            {
+                throw new InvalidDataException(
+                    "Existing CSV row " + (row + 1) + " must contain exactly 3 fields.");
+            }
+
+            uint id = ParseTranslationId(fields[0]);
+            if (fields[2].Length == 0)
+            {
+                throw new InvalidDataException(
+                    "Empty existing translation for 0x" + id.ToString("X8"));
+            }
+            if (translations.ContainsKey(id))
+            {
+                throw new InvalidDataException(
+                    "Duplicate existing translation ID: 0x" + id.ToString("X8"));
+            }
+            translations.Add(id, fields[2]);
+        }
+        return translations;
     }
 
     private static string NormalizeTranslationWhitespace(string value)
@@ -225,12 +385,15 @@ internal static class GenerateTranslationCsv
     private static void WriteCsv(
         string path,
         IList<Lh2Entry> entries,
+        IDictionary<uint, string> existingTranslations,
         IDictionary<string, string> legacyTranslations,
         IDictionary<string, string> whitespaceInsensitiveTranslations,
+        out int preservedCount,
         out int translatedCount,
         out int fallbackCount,
         out int missingCount)
     {
+        preservedCount = 0;
         translatedCount = 0;
         fallbackCount = 0;
         missingCount = 0;
@@ -244,7 +407,12 @@ internal static class GenerateTranslationCsv
             foreach (Lh2Entry entry in entries)
             {
                 string translation;
-                if (legacyTranslations.TryGetValue(entry.English, out translation))
+                if (existingTranslations != null &&
+                    existingTranslations.TryGetValue(entry.Id, out translation))
+                {
+                    ++preservedCount;
+                }
+                else if (legacyTranslations.TryGetValue(entry.English, out translation))
                 {
                     ++translatedCount;
                 }
@@ -273,25 +441,29 @@ internal static class GenerateTranslationCsv
 
     public static int Main(string[] args)
     {
-        if (args.Length != 3)
+        if (args.Length != 3 && args.Length != 4)
         {
             Console.Error.WriteLine(
-                "Usage: GenerateTranslationCsv <original-lh2> <legacy-launcher.xml> <output.csv>");
+                "Usage: GenerateTranslationCsv <original-lh2> <legacy-launcher.xml> <output.csv> [existing.csv]");
             return 2;
         }
 
         try
         {
             int totalCount;
+            int recoveredNbspCount;
             int invalidUtf8Count;
             int singleCharacterCount;
             int nonMeaningfulCount;
             List<Lh2Entry> entries = ReadLh2(
                 args[0],
                 out totalCount,
+                out recoveredNbspCount,
                 out invalidUtf8Count,
                 out singleCharacterCount,
                 out nonMeaningfulCount);
+            Dictionary<uint, string> existingTranslations =
+                args.Length == 4 ? ReadExistingTranslations(args[3]) : null;
             int pairCount;
             int conflictCount;
             Dictionary<string, string> legacyTranslations = ReadLegacyTranslations(
@@ -304,23 +476,32 @@ internal static class GenerateTranslationCsv
                     legacyTranslations,
                     out ambiguousNormalizedCount);
 
+            int preservedCount;
             int translatedCount;
             int fallbackCount;
             int missingCount;
             WriteCsv(
                 args[2],
                 entries,
+                existingTranslations,
                 legacyTranslations,
                 whitespaceInsensitiveTranslations,
+                out preservedCount,
                 out translatedCount,
                 out fallbackCount,
                 out missingCount);
 
             Console.WriteLine("LCH2 IDs: {0}", totalCount);
             Console.WriteLine("CSV-eligible IDs: {0}", entries.Count);
+            Console.WriteLine(
+                "Windows-1252 NBSP strings recovered: {0}",
+                recoveredNbspCount);
             Console.WriteLine("Excluded invalid UTF-8: {0}", invalidUtf8Count);
             Console.WriteLine("Excluded single-character strings: {0}", singleCharacterCount);
             Console.WriteLine("Excluded non-meaningful strings: {0}", nonMeaningfulCount);
+            Console.WriteLine(
+                "Existing translations preserved by ID: {0}",
+                preservedCount);
             Console.WriteLine("Legacy XML pairs: {0}", pairCount);
             Console.WriteLine("Unique English keys: {0}", legacyTranslations.Count);
             Console.WriteLine("Conflicting duplicate keys (first kept): {0}", conflictCount);

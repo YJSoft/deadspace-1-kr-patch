@@ -1,8 +1,8 @@
 {
   "format": 2,
   "patch": {
-    "file": "deadspace1-kr-v0.3.pat",
-    "sha256": "3663303FA7D335DC512C7B61EAA21E0500013AA06BC652C149C8D6BFF607842A"
+    "file": "deadspace1-kr-v0.3.1.pat",
+    "sha256": "A6A600E007A88054DF649984BD4FFEE1709174638A921AFF16B28565E2EB8DC6"
   },
   "inputs": [
     {
@@ -24,26 +24,16 @@
       "file": "text_assets/text/D8CBB618.str",
       "sha256": "C27FD36F4416AEF63E17DC3A5803BDB72418A702C277BF8BC31A26298C12BDF0",
       "kind": "ea-app"
-    },
-    {
-      "file": "text_assets/text_assets_global.str",
-      "sha256": "CCB906F6AC651E0E1C3E85E247C94CA11D96CA03F1B53A88B6EF679C2A32F3E1",
-      "kind": "legacy-upgrade"
-    },
-    {
-      "file": "text_assets/text/D8CBB618.str",
-      "sha256": "30159AA3748058AC639839DEFB9CC233DBE7158CA0B09538CDC5DBC27BABE0BC",
-      "kind": "legacy-upgrade"
     }
   ],
   "outputs": [
     {
       "file": "text_assets/text_assets_global.str",
-      "sha256": "E87A4FC56065326E12B5688DDE1529115183AE2EA8BF022341FB72ED5BD2EDF8"
+      "sha256": "56EE952DE973ECAA4A57238621541CE234461F4EA179BEAE561FF7509B227DAE"
     },
     {
       "file": "text_assets/text/D8CBB618.str",
-      "sha256": "06ECCAAFDE78A735C0BB299F422441CFAEC15D4EC7EFA22BB572FD7AE0829FC4"
+      "sha256": "CE9220FA7A9A9F69F68890A82DFF837CF456D65414A7E732027819F8BD6470E8"
     }
   ]
 }

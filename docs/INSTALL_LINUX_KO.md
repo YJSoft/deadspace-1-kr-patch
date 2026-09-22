@@ -1,23 +1,23 @@
 # Linux / Steam Deck 설치 안내
 
 이 설치기는 Linux에서 Steam/Proton으로 실행하는 Dead Space (2008)에 한국어 개선
-패치 0.3을 설치한다. Ubuntu 26.04와 Steam Deck 데스크톱 모드에서 같은 AppImage를
+패치 0.3.1을 설치한다. Ubuntu 26.04와 Steam Deck 데스크톱 모드에서 같은 AppImage를
 사용할 수 있다.
 
 ## 설치
 
 1. Steam에서 Dead Space를 설치하고 한 번도 실행하지 않았더라도 게임 파일이 완전히
    내려받아졌는지 확인한다.
-2. 내려받은 `DeadSpace1-KR-0.3-x86_64.AppImage`에 실행 권한을 준다.
+2. 내려받은 `DeadSpace1-KR-0.3.1-x86_64.AppImage`에 실행 권한을 준다.
 
    ```bash
-   chmod +x DeadSpace1-KR-0.3-x86_64.AppImage
+   chmod +x DeadSpace1-KR-0.3.1-x86_64.AppImage
    ```
 
 3. 파일을 더블클릭한다. 열리지 않으면 터미널에서 다음처럼 실행한다.
 
    ```bash
-   ./DeadSpace1-KR-0.3-x86_64.AppImage
+   ./DeadSpace1-KR-0.3.1-x86_64.AppImage
    ```
 
 4. 자동으로 표시된 Dead Space 폴더를 확인하고 `설치 / 업데이트`를 누른다. 자동
@@ -49,7 +49,7 @@
 AppImage 자체의 추출 실행 기능을 사용할 수 있다.
 
 ```bash
-./DeadSpace1-KR-0.3-x86_64.AppImage --appimage-extract-and-run
+./DeadSpace1-KR-0.3.1-x86_64.AppImage --appimage-extract-and-run
 ```
 
 게임과 AppImage를 Wine/Proton 안에서 실행하지 않는다. 설치기는 Linux 프로그램이며,

@@ -39,20 +39,26 @@ internal static class BuildPocAssets
     private sealed class FontAsset
     {
         public string Inf;
+        public string Tg4h;
         public string Tg4d;
+        public string EmbeddedName;
         public ushort GlyphWidth;
         public ushort GlyphHeight;
         public float GlyphEmSize;
 
         public FontAsset(
             string inf,
+            string tg4h,
             string tg4d,
+            string embeddedName,
             ushort glyphWidth,
             ushort glyphHeight,
             float glyphEmSize)
         {
             Inf = inf;
+            Tg4h = tg4h;
             Tg4d = tg4d;
+            EmbeddedName = embeddedName;
             GlyphWidth = glyphWidth;
             GlyphHeight = glyphHeight;
             GlyphEmSize = glyphEmSize;
@@ -564,6 +570,80 @@ internal static class BuildPocAssets
             ReadU16(inf, record + 18) / 16);
     }
 
+    private static void ReplaceEmbeddedFontName(
+        byte[] inf,
+        string sourceName,
+        string destinationName)
+    {
+        byte[] source = Encoding.ASCII.GetBytes(sourceName + "\0");
+        byte[] destination = Encoding.ASCII.GetBytes(destinationName + "\0");
+        const int nameFieldLength = 32;
+        if (destination.Length > nameFieldLength)
+        {
+            throw new InvalidDataException("FFN embedded name is too long: " + destinationName);
+        }
+
+        int match = -1;
+        for (int offset = 0; offset <= inf.Length - source.Length; ++offset)
+        {
+            bool equal = true;
+            for (int index = 0; index < source.Length; ++index)
+            {
+                if (inf[offset + index] != source[index])
+                {
+                    equal = false;
+                    break;
+                }
+            }
+            if (!equal)
+            {
+                continue;
+            }
+            if (match >= 0)
+            {
+                throw new InvalidDataException(
+                    "Multiple embedded FFN names found: " + sourceName);
+            }
+            match = offset;
+        }
+        if (match < 0)
+        {
+            throw new InvalidDataException("Embedded FFN name was not found: " + sourceName);
+        }
+
+        Array.Clear(inf, match, nameFieldLength);
+        Buffer.BlockCopy(destination, 0, inf, match, destination.Length);
+    }
+
+    private static void ExpandFontFromTemplate(
+        string workRoot,
+        FontAsset template,
+        FontAsset target)
+    {
+        string templateInf = Path.Combine(workRoot, template.Inf);
+        string targetInf = Path.Combine(workRoot, target.Inf);
+        byte[] expandedInf = File.ReadAllBytes(templateInf);
+        ReplaceEmbeddedFontName(
+            expandedInf,
+            template.EmbeddedName,
+            target.EmbeddedName);
+        File.WriteAllBytes(targetInf, expandedInf);
+
+        File.Copy(
+            Path.Combine(workRoot, template.Tg4h),
+            Path.Combine(workRoot, target.Tg4h),
+            true);
+        File.Copy(
+            Path.Combine(workRoot, template.Tg4d),
+            Path.Combine(workRoot, target.Tg4d),
+            true);
+
+        Console.WriteLine(
+            "Font: expanded {0} from the {1} container",
+            target.EmbeddedName,
+            template.EmbeddedName);
+    }
+
     private static void WriteGlyphRectangle(byte[] inf, int record, Rectangle rectangle)
     {
         WriteU16(inf, record + 12, checked((ushort)(rectangle.Left * 16)));
@@ -805,23 +885,49 @@ internal static class BuildPocAssets
                 codepoints.Count,
                 new string(codepoints.Select(value => (char)value).ToArray()));
 
+            var russellSquare = new FontAsset(
+                    @"FFN\0105_russellsquare32.inf",
+                    @"tg4h\0012_russellsquare32.tg4h",
+                    @"tg4d\0013_russellsquare32.tg4d",
+                    "russellsquare32",
+                    32, 32,
+                    25.0f);
+            var briemAkademi = new FontAsset(
+                    @"FFN\0106_briemakademistdsemibold32.inf",
+                    @"tg4h\0000_briemakademistdsemibold32.tg4h",
+                    @"tg4d\0001_briemakademistdsemibold32.tg4d",
+                    "briemakademistdsemibold32",
+                    32, 32,
+                    25.0f);
+            var eurostile = new FontAsset(
+                    @"FFN\0108_eurostileltstdbold32.inf",
+                    @"tg4h\0006_eurostileltstdbold32.tg4h",
+                    @"tg4d\0007_eurostileltstdbold32.tg4d",
+                    "eurostileltstdbold32",
+                    32, 32,
+                    25.0f);
+            var rotisSans = new FontAsset(
+                    @"FFN\0109_rotissansserif32.inf",
+                    @"tg4h\0010_rotissansserif32.tg4h",
+                    @"tg4d\0011_rotissansserif32.tg4d",
+                    "rotissansserif32",
+                    32, 32,
+                    25.0f);
+
+            // Database text-log bodies use Rotis Sans Serif rather than the
+            // three fonts used by menus and subtitles. The Chinese container
+            // only reserves 190 glyph records for Rotis, so Korean body text
+            // looked completely blank even though the translated LCH2 entry
+            // was present. Give it the same expanded FFN/texture capacity as
+            // Russell Square before drawing the shared Nanum Barun Gothic set.
+            ExpandFontFromTemplate(args[1], russellSquare, rotisSans);
+
             var fonts = new[]
             {
-                new FontAsset(
-                    @"FFN\0105_russellsquare32.inf",
-                    @"tg4d\0013_russellsquare32.tg4d",
-                    32, 32,
-                    25.0f),
-                new FontAsset(
-                    @"FFN\0106_briemakademistdsemibold32.inf",
-                    @"tg4d\0001_briemakademistdsemibold32.tg4d",
-                    32, 32,
-                    25.0f),
-                new FontAsset(
-                    @"FFN\0108_eurostileltstdbold32.inf",
-                    @"tg4d\0007_eurostileltstdbold32.tg4d",
-                    32, 32,
-                    25.0f),
+                russellSquare,
+                briemAkademi,
+                eurostile,
+                rotisSans,
             };
 
             using (var privateFonts = new PrivateFontCollection())

@@ -25,9 +25,9 @@
 ## 테스트 배포 체크리스트
 
 1. Release Win32 DLL 두 개와 자산 생성기를 깨끗한 환경에서 빌드한다.
-2. 현재 Steam 순정본(`12F4D5F8.str`), EA App 영어 순정본(`D8CBB618.str`), 이전
-   설치판 업그레이드 입력과 최종 STR로 VPatch를 재생성하고 매니페스트 해시를
-   검토한다.
+2. 현재 Steam 순정본(`12F4D5F8.str`), EA App 영어 순정본(`D8CBB618.str`)과 최종
+   STR로 VPatch를 재생성하고 매니페스트 해시를 검토한다. 기존 설치판 업그레이드는
+   설치기가 보존한 순정 백업을 입력으로 사용한다.
 3. NSIS 설치 마법사를 빌드하고 Steam 및 EA App 원본 파일을 복사한 각 격리
    폴더에서 설치한다.
    Linux x86_64 AppImage도 빌드해 `--version`, `--verify-resources`와 GUI 실행을
@@ -50,7 +50,7 @@
    - NSIS 라이선스
    - VPatch zlib
 10. DLL과 완성 STR는 Git 소스 브랜치에 커밋하지 않는다. 배포는 CI가 생성한
-   `DeadSpace1-KR-0.3.exe` 또는 `DeadSpace1-KR-0.3-x86_64.AppImage`를 사용한다.
+   `DeadSpace1-KR-0.3.1.exe` 또는 `DeadSpace1-KR-0.3.1-x86_64.AppImage`를 사용한다.
 
 `nightly` 릴리스에 이미 올라간 이전 버전 자산은 삭제하지 않는다. 같은 버전의 최신
 커밋 산출물만 `--clobber`로 교체한다.
