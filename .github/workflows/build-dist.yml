@@ -60,6 +60,14 @@ jobs:
           retention-days: 30
           archive: false
 
+      - name: Upload nightly.link Windows ZIP
+        uses: actions/upload-artifact@v7
+        with:
+          name: nightly-windows
+          path: dist/DeadSpace1-KR-0.3.1.exe
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Upload Linux runtime inputs
         uses: actions/upload-artifact@v7
         with:
@@ -142,6 +150,14 @@ jobs:
           if-no-files-found: error
           retention-days: 30
           archive: false
+
+      - name: Upload nightly.link Linux ZIP
+        uses: actions/upload-artifact@v7
+        with:
+          name: nightly-linux
+          path: dist/DeadSpace1-KR-0.3.1-x86_64.AppImage
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Upload Linux release input
         uses: actions/upload-artifact@v7
