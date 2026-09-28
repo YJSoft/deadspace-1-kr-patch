@@ -51,22 +51,13 @@ jobs:
         shell: pwsh
         run: .\scripts\build-installer.ps1 -NsisRoot $env:NSIS_ROOT -GitHash "${{ steps.version.outputs.short_sha }}"
 
-      - name: Upload standalone Windows installer
-        uses: actions/upload-artifact@v7
-        with:
-          name: DeadSpace1-KR-0.3.1-Windows
-          path: dist/DeadSpace1-KR-0.3.1.exe
-          if-no-files-found: error
-          retention-days: 30
-          archive: false
-
       - name: Upload nightly.link Windows ZIP
         uses: actions/upload-artifact@v7
         with:
           name: nightly-windows
           path: dist/DeadSpace1-KR-0.3.1.exe
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 90
 
       - name: Upload Linux runtime inputs
         uses: actions/upload-artifact@v7
@@ -76,14 +67,6 @@ jobs:
             dist/ds1k_utf8.dll
             dist/xinput1_3.dll
             dist/SDL3.dll
-          if-no-files-found: error
-          retention-days: 1
-
-      - name: Upload Windows release input
-        uses: actions/upload-artifact@v7
-        with:
-          name: release-windows
-          path: dist/DeadSpace1-KR-0.3.1.exe
           if-no-files-found: error
           retention-days: 1
 
@@ -142,30 +125,13 @@ jobs:
           ./dist/DeadSpace1-KR-0.3.1-x86_64.AppImage --appimage-extract-and-run --version
           ./dist/DeadSpace1-KR-0.3.1-x86_64.AppImage --appimage-extract-and-run --verify-resources
 
-      - name: Upload standalone Linux installer
-        uses: actions/upload-artifact@v7
-        with:
-          name: DeadSpace1-KR-0.3.1-Linux-x86_64
-          path: dist/DeadSpace1-KR-0.3.1-x86_64.AppImage
-          if-no-files-found: error
-          retention-days: 30
-          archive: false
-
       - name: Upload nightly.link Linux ZIP
         uses: actions/upload-artifact@v7
         with:
           name: nightly-linux
           path: dist/DeadSpace1-KR-0.3.1-x86_64.AppImage
           if-no-files-found: error
-          retention-days: 30
-
-      - name: Upload Linux release input
-        uses: actions/upload-artifact@v7
-        with:
-          name: release-linux
-          path: dist/DeadSpace1-KR-0.3.1-x86_64.AppImage
-          if-no-files-found: error
-          retention-days: 1
+          retention-days: 90
 
   publish-nightly:
     if: >-
@@ -180,13 +146,13 @@ jobs:
       - name: Download Windows release input
         uses: actions/download-artifact@v8
         with:
-          name: release-windows
+          name: nightly-windows
           path: release
 
       - name: Download Linux release input
         uses: actions/download-artifact@v8
         with:
-          name: release-linux
+          name: nightly-linux
           path: release
 
       - name: Publish rolling nightly release
@@ -206,8 +172,6 @@ jobs:
           0.3.1은 기록 자료 본문용 글꼴에도 한글 글리프를 추가해 본문이 비어 보이던
           문제를 수정하고, Windows-1252 특수 공백 때문에 누락됐던 오디오 로그 자막을
           번역합니다.
-
-          이전 버전 설치 파일은 이 릴리스에서 삭제하지 않습니다.
 
           커밋: ${{ github.sha }}
 
