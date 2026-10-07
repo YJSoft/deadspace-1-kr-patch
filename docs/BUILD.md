@@ -212,6 +212,9 @@ Windows Server 2022와 Ubuntu 빌드를 수행한다. SDL 3.2.8 공식 Visual C+
 패키지는 고정된 URL과 SHA-256으로 검증한 뒤 사용한다.
 
 CI는 고정 URL과 SHA-256으로 NSIS 3.12도 검증해 준비한 뒤 설치 마법사를 만든다.
+Linux용 appimagetool은 `1.9.1`, type-2 runtime은 날짜 태그 `20251108`에 고정하고
+각 파일의 SHA-256을 검증한다. 교체되는 `continuous` 자산은 사용하지 않는다.
+런타임을 올릴 때는 공식 고정 릴리스의 URL과 체크섬을 함께 갱신해야 한다.
 `scripts/test-input.cmd`로 게임을 실행하지 않는 두 입력 변환 단위 검사도 수행한다.
 `actions/upload-artifact@v7`은 고정 이름 `nightly-windows`, `nightly-linux`의 ZIP에
 다음 설치 파일을 각각 하나씩 업로드한다.
