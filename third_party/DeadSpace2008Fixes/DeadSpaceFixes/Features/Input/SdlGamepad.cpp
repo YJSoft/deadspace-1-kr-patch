@@ -1,5 +1,7 @@
 #include "common.h"
 #include "Utils.h"
+#include "Config.h"
+#include "controller_transform.hpp"
 
 #include <atomic>
 
@@ -16,6 +18,22 @@ namespace {
 	XInputGetState_t oXInputGetState = nullptr;
 	XInputSetState_t oXInputSetState = nullptr;
 	XInputGetCapabilities_t oXInputGetCapabilities = nullptr;
+
+	void TransformRightStick(XINPUT_STATE* state) {
+		if (state && Config::Fixes::ControllerDeadzone) {
+			static const ControllerTransformConfig config;
+			ApplyRightStickTransform(&state->Gamepad.sThumbRX, &state->Gamepad.sThumbRY, config);
+		}
+	}
+
+	DWORD ForwardGetState(DWORD userIndex, XINPUT_STATE* state) {
+		if (!oXInputGetState)
+			return ERROR_DEVICE_NOT_CONNECTED;
+		const DWORD result = oXInputGetState(userIndex, state);
+		if (result == ERROR_SUCCESS)
+			TransformRightStick(state);
+		return result;
+	}
 
 	SDL_Gamepad* g_CurrentGamepad = nullptr;
 	SDL_JoystickID g_CurrentGamepadId = 0;
@@ -153,14 +171,15 @@ namespace Features {
 
 extern "C" DWORD WINAPI XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState)
 {
+	if (!pState)
+		return ERROR_BAD_ARGUMENTS;
 	if (dwUserIndex == 0)
 	{
 		AcquireSRWLockShared(&g_GamepadLock);
 		if (g_CurrentGamepad == nullptr || !SDL_GamepadConnected(g_CurrentGamepad))
 		{
 			ReleaseSRWLockShared(&g_GamepadLock);
-			if (oXInputGetState) return oXInputGetState(dwUserIndex, pState);
-			return ERROR_DEVICE_NOT_CONNECTED;
+			return ForwardGetState(dwUserIndex, pState);
 		}
 
 		memset(pState, 0, sizeof(XINPUT_STATE)); //clear the games struct so we start fresh
@@ -208,12 +227,12 @@ extern "C" DWORD WINAPI XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState)
 
 		pState->Gamepad.sThumbLY = (sdlLeftY == -32768) ? 32767 : -sdlLeftY; //then  we safely invert the y values here
 		pState->Gamepad.sThumbRY = (sdlRightY == -32768) ? 32767 : -sdlRightY;
+		TransformRightStick(pState);
 
 		ReleaseSRWLockShared(&g_GamepadLock);
 		return ERROR_SUCCESS;
 	}
-	if (oXInputGetState) return oXInputGetState(dwUserIndex, pState);
-	return ERROR_DEVICE_NOT_CONNECTED;
+	return ForwardGetState(dwUserIndex, pState);
 }
 
 extern "C" DWORD WINAPI XInputSetState(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration)

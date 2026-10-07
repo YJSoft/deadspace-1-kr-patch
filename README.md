@@ -18,18 +18,31 @@ STR에 저장소의 VPatch 차등 데이터를 적용해 한국어 STR를 설치
 - 번역 가능한 4,562개 ID가 CSV에 들어 있다. Windows-1252 `0xA0` 공백만 문제인
   오디오 로그 문자열도 복구하며, 그 밖의 잘못된 UTF-8·한 글자·의미 없는 기호뿐인
   483개 항목은 원본 바이트를 보존한다.
-- 메뉴·자막용 세 글꼴과 기록 자료 본문용 글꼴의 한글·영문·숫자·기호를
-  나눔바른고딕 Regular로 통일한다.
+- 메뉴·자막·기록 본문·방 이름 등 일반 텍스트용 일곱 글꼴의 한글·영문·숫자·기호를
+  나눔바른고딕 Regular로 통일한다. 버튼 아이콘과 외계 문자 글꼴은 보존한다.
 - 게임 내부의 실제 렌더 높이를 읽어 720p 기준 자막 레이아웃·줄바꿈·글리프 크기를
   함께 조절한다. Windows DPI 배율과 관계없이 2160p에서는 3배가 적용된다.
 - Alt+Tab 복귀 시 보더리스 창의 마우스 고정과 시스템 커서 숨김을 복원한다.
 - [DeadSpace2008Fixes](https://github.com/seamusduncmcgrath/DeadSpace2008Fixes)의
   수정 기능을 통합한다.
+- [DeadSpace2008CompleteInputFix](https://github.com/RealRama2120/DeadSpace2008CompleteInputFix)의
+  오른쪽 스틱 데드존 보정과 일반/무중력 마우스 카메라 수정을 같은 프록시에 통합한다.
 
 중국어·일본어 패치는 확장 FFN 글리프 테이블과 패치 형식을 확인하기 위한 정적 분석
 기준으로만 사용했다. 크랙 기반일 수 있는 외부 실행 파일은 실행하지 않으며, PE 헤더·
 리소스·오버레이와 패치 전후 파일만 읽는다. 해당 실행 파일과 리소스는 이 저장소에
 포함하지 않는다.
+
+## 0.4.0 변경 사항
+
+- DeadSpace2008Fixes의 최신 버전 문자열 포인터 교체와 디버그 로그 기본값을 반영했다.
+  고해상도 자막은 이미 적용한 전체 레이아웃 배율 수정을 유지해 중복 적용하지 않는다.
+- CompleteInputFix의 입력 수정 두 가지를 기본 활성화했다. 기존 SDL3 컨트롤러와
+  시스템 XInput 양쪽에서 오른쪽 스틱만 보정하며 왼쪽 스틱·버튼·트리거는 보존한다.
+- 챕터 2 방 이름의 번역은 있었지만 Serpentine Bold 등 일부 일반 텍스트 글꼴에는
+  한글이 없었다. 나머지 세 글꼴에도 한글을 추가해 일곱 일반 텍스트 글꼴을 모두
+  같은 서체로 생성한다. 실제 제보 장면 확인은 게임 플레이 검수 항목으로 남긴다.
+- Windows/Linux 설치기에 CompleteInputFix의 MIT 라이선스를 포함한다.
 
 ## 0.3.1 변경 사항
 
@@ -45,6 +58,7 @@ STR에 저장소의 VPatch 차등 데이터를 적용해 한국어 STR를 설치
 | --- | --- |
 | `src/` | 독립 UTF-8 사이드카 DLL과 XInput 전달 코드 |
 | `third_party/DeadSpace2008Fixes/` | MIT 기반 메인 XInput 프록시와 DS1K 수정 사항 |
+| `third_party/DeadSpace2008CompleteInputFix/` | MIT 기반 입력 변환·마우스 훅과 단위 검사 |
 | `tools/` | 번역 CSV 및 LCH2/FFN/TG4D 자산 생성기 |
 | `translations/` | 현재 번역과 초기 가져오기 스냅샷 |
 | `assets/fonts/` | 글꼴 자산 생성에 사용하는 나눔바른고딕 원본 입력 파일 |
@@ -89,11 +103,11 @@ x86_64 AppImage를 빌드해 각각 단일 파일 artifact로 업로드한다. �
 성공할 때마다 `nightly` 프리릴리스의 현재 버전 자산만 교체한다. 0.2 등 이전 버전
 자산은 새 버전이 올라와도 삭제하지 않는다.
 
-https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.3.1.exe
+https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.4.0.exe
 
 Linux/Steam Deck용 고정 주소:
 
-https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.3.1-x86_64.AppImage
+https://github.com/YJSoft/deadspace-1-kr-patch/releases/download/nightly/DeadSpace1-KR-0.4.0-x86_64.AppImage
 
 Linux판은 설치 후 Steam 실행 옵션에 다음 값을 넣어야 한다. AppImage 설치 화면의
 `옵션 복사` 버튼으로 그대로 복사할 수 있다.
@@ -102,9 +116,9 @@ Linux판은 설치 후 Steam 실행 옵션에 다음 값을 넣어야 한다. Ap
 WINEDLLOVERRIDES="xinput1_3=n,b" %command%
 ```
 
-GitHub Actions의 사용자용 artifact는 ZIP 없는 단일 EXE 또는 AppImage로 유지한다.
-nightly.link는 현재 `archive: false` 비압축 artifact를 지원하지 않으므로 고정 링크는
-GitHub Release 자산을 사용한다.
+GitHub Actions는 고정 이름 `nightly-windows`, `nightly-linux`의 ZIP artifact에
+각각 설치 파일 하나를 담는다. nightly.link에서도 이 이름으로 최신 빌드를 받을 수 있다.
+GitHub Release의 EXE/AppImage 직접 다운로드 주소도 함께 유지한다.
 
 과거 게임 폴더 안에서 사용하던 `ds1k-prototype` 작업 디렉터리는 현재 빌드나 설치에
 참조되지 않는다. 순정 게임에 CI 설치 파일을 시험할 때는 이 저장소와 설치 EXE만 있으면
@@ -134,7 +148,9 @@ CSV의 `id`와 `english`는 유지하고 `translation`만 수정한다. CSV는 U
 ## 출처와 라이선스
 
 DeadSpace2008Fixes 수정 코드는 upstream revision
-`975836ed1c7de5fd447d3694324fecdc870c8719`을 기준으로 한다. DSOpt의 자막 전체
+`c662b942f8f8f982b1a1e041dd24172c6db8352f`까지의 기능 변경을 반영한다.
+CompleteInputFix 입력 코드는 `ae3bc1508aeefe45fcdc8b03a45a0b68a6e543bc`을 기준으로
+한다. 두 프로젝트의 MIT 고지를 배포물에 포함한다. DSOpt의 자막 전체
 배율 처리 설계와 시그니처를 MIT 조건으로 참고했다. MinHook, SDL3, 나눔바른고딕을
 포함한 제3자 저작물은 각각의 라이선스를 따른다.
 

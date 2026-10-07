@@ -11,6 +11,8 @@ namespace Config {
 		bool LegacyDirectInput = true;
 		bool LoadingScreenDelay = false;
 		bool HighPrecisionTimer = true;
+		bool ControllerDeadzone = true;
+		bool RawMouseCamera = true;
 	}
 
 	namespace Patches {
@@ -49,7 +51,7 @@ namespace Config {
 		// Bump this whenever the config key set changes. A stale config file
 		// is then regenerated with the canonical keys instead of silently
 		// dropping options the current build doesn't know about.
-		constexpr int kConfigVersion = 4;
+		constexpr int kConfigVersion = 5;
 
 		// Every known option is declared here once and used everywhere below,
 		// so the default, the help text and the read/write logic can't drift
@@ -68,6 +70,8 @@ namespace Config {
 			{ kFixesSection,   "PatchOutDInput8", 1, "Patch out the game's DInput8 DLL usage" },
 			{ kFixesSection,   "UseHighPrecisionTimer", 1, "Use the high-precision timer instead of GetTickCount (helps at high framerates)" },
 			{ kFixesSection,   "SkipLoadingScreenDelay", 0, "Skip the artificial wait on the loading screen once the level is ready" },
+			{ kFixesSection,   "FixControllerDeadzone", 1, "Compensate the game's right-stick deadzone; keep an 11 percent physical cutoff" },
+			{ kFixesSection,   "FixRawMouseCamera", 1, "Use raw mouse deltas for standard and zero-G camera movement" },
 			{ kPatchesSection, "BorderlessWindowed", 1, "Run the game in a borderless window instead of fullscreen" },
 			{ kPatchesSection, "RemoveTelemetry", 1, "Disable the game's telemetry/data collection" },
 			{ kPatchesSection, "SkipIshimuraLandingCutscene", 0, "Skip the Ishimura landing cutscene on new game (plus) start" },
@@ -265,6 +269,8 @@ namespace Config {
 		Fixes::LegacyDirectInput = read(kFixesSection, "PatchOutDInput8", 1);
 		Fixes::LoadingScreenDelay = read(kFixesSection, "SkipLoadingScreenDelay", 0);
 		Fixes::HighPrecisionTimer = read(kFixesSection, "UseHighPrecisionTimer", 1);
+		Fixes::ControllerDeadzone = read(kFixesSection, "FixControllerDeadzone", 1);
+		Fixes::RawMouseCamera = read(kFixesSection, "FixRawMouseCamera", 1);
 		Patches::BorderlessWindow = read(kPatchesSection, "BorderlessWindowed", 1);
 		Patches::Telemetry = read(kPatchesSection, "RemoveTelemetry", 1);
 		Patches::IntroCutscene = read(kPatchesSection, "SkipIshimuraLandingCutscene", 0);

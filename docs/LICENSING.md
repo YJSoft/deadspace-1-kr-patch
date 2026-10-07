@@ -5,7 +5,9 @@
 ## 제3자 구성 요소
 
 - DeadSpace2008Fixes: MIT, 기준 revision
-  `975836ed1c7de5fd447d3694324fecdc870c8719`
+  `c662b942f8f8f982b1a1e041dd24172c6db8352f`
+- DeadSpace2008CompleteInputFix: MIT, 기준 revision
+  `ae3bc1508aeefe45fcdc8b03a45a0b68a6e543bc`
 - DSOpt: MIT, 자막 전체 레이아웃·그리기 배율 설계와 시그니처 참고
 - MinHook: BSD 2-Clause
 - SDL3: zlib License

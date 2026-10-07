@@ -1,4 +1,4 @@
-Dead Space KR 0.3.1 — 설치 및 설정 안내
+Dead Space KR 0.4.0 — 설치 및 설정 안내
 =====================================
 
 [지원 대상]
@@ -19,7 +19,7 @@ Steam 원본 문자열 ID 5,045개 가운데 번역 가능한 4,562개가 CSV에
 -------
 
 1) 게임을 완전히 종료합니다.
-2) DeadSpace1-KR-0.3.1.exe를 실행합니다.
+2) DeadSpace1-KR-0.4.0.exe를 실행합니다.
 3) 설치 마법사에서 Dead Space.exe가 있는 게임 폴더를 선택합니다.
 
    예: D:\SteamLibrary\steamapps\common\Dead Space
@@ -33,7 +33,7 @@ Steam 원본 문자열 ID 5,045개 가운데 번역 가능한 4,562개가 CSV에
 5) 설치가 끝나면 Steam 또는 EA App 라이브러리에서 Dead Space를 실행합니다.
 6) 메인화면 오른쪽 아래에 다음 문구가 두 줄로 나오면 적용된 것입니다.
 
-   Dead Space KR 0.3.1
+   Dead Space KR 0.4.0
    번역 검수용 버전
 
 설치 중 원본 파일은 다음 폴더에 보관됩니다.
@@ -51,7 +51,7 @@ Steam 원본 문자열 ID 5,045개 가운데 번역 가능한 4,562개가 CSV에
 1-1. 기존 버전에서 업그레이드
 -------------------------------
 
-1) 게임을 완전히 종료하고 새 DeadSpace1-KR-0.3.1.exe를 실행합니다.
+1) 게임을 완전히 종료하고 새 DeadSpace1-KR-0.4.0.exe를 실행합니다.
 2) 기존 패치를 설치했던 같은 Dead Space 폴더를 선택합니다.
 3) 설치기는 기존 설치와 원본 백업을 확인하고 새 STR 두 개를 임시 위치에서 먼저
    생성해 검증합니다.
@@ -95,6 +95,18 @@ Dead Space.exe는 교체하거나 수정하지 않습니다.
 0(사용 안 함)으로 바꿉니다. 게임 실행 중 수정한 값은 다음 실행부터 적용됩니다.
 
 [Fixes]
+
+FixControllerDeadzone=1
+  오른쪽 스틱의 큰 내부 데드존을 보정합니다. 물리 스틱의 중앙 11%는 입력을
+  무시해 드리프트를 억제하며, 왼쪽 스틱·버튼·트리거는 바꾸지 않습니다.
+  Steam Input 등에서 별도 안티 데드존을 설정했다면 중복 보정에 주의하십시오.
+  기존 조준 동작을 사용하려면 0으로 바꿉니다.
+
+FixRawMouseCamera=1
+  일반 이동과 무중력 구간의 마우스 카메라를 원시 이동량으로 보정합니다.
+  게임의 마우스 감도와 축 반전 설정은 유지하며 메뉴 커서는 변경하지 않습니다.
+  지원 코드가 확인되지 않으면 원래 입력을 유지합니다. 문제가 있으면 0으로
+  바꾸고 다시 실행하십시오.
 
 FixVSync=1
   게임 VSync의 30 FPS 제한 동작을 수정합니다. 게임 엔진은 여전히 디스플레이
@@ -148,7 +160,7 @@ SafeFPSCap=0
 - CSV에서 생성한 ID 기반 한국어 문자열 리소스
 - 한글·영문·숫자·기호를 나눔바른고딕으로 통일
 - 공통 em·라인 박스·기준선 및 독립 여백 적용
-- 메인화면 Dead Space KR 0.3.1 / 번역 검수용 버전 표시
+- 메인화면 Dead Space KR 0.4.0 / 번역 검수용 버전 표시
 - 16배 이방성 필터링
 - 8개 초과 논리 프로세서 환경의 CPU affinity 보정
 - 안전한 세이브 문자열 처리
@@ -167,7 +179,7 @@ id는 문자열을 식별하는 값이고 english는 참고용 Steam 원문입�
 -------------------
 
 1) 게임을 완전히 종료합니다.
-2) Windows 설정의 '설치된 앱'에서 Dead Space 1 한국어 개선 패치 0.3.1을 제거합니다.
+2) Windows 설정의 '설치된 앱'에서 Dead Space 1 한국어 개선 패치 0.4.0을 제거합니다.
 
    또는 Dead Space\DS1K_Patch\Uninstall.exe를 실행할 수 있습니다.
 
@@ -206,7 +218,7 @@ Application load error 5:0000065434
 
 글자가 네모 또는 공백으로 나옴
   해당 화면, 표시 문장과 문자열 ID가 보이면 ID를 함께 제보해 주십시오. 현재 CSV의
-  번역문에서 수집한 비ASCII 문자를 메뉴·자막·기록 본문용 네 UI 글꼴에 포함했습니다.
+  번역문에서 수집한 비ASCII 문자를 일반 텍스트용 일곱 글꼴에 포함했습니다.
 
 자막 크기 문제
   해상도, 화면비, 전체 화면 여부와 스크린샷을 함께 제보해 주십시오. 임시로
@@ -226,12 +238,17 @@ Application load error 5:0000065434
 
 DeadSpace2008Fixes 기반 수정 코드를 포함합니다.
 https://github.com/seamusduncmcgrath/DeadSpace2008Fixes
-기준 revision: 975836ed1c7de5fd447d3694324fecdc870c8719
+기준 revision: c662b942f8f8f982b1a1e041dd24172c6db8352f
+
+DeadSpace2008CompleteInputFix의 오른쪽 스틱 및 마우스 카메라 수정을 포함합니다.
+https://github.com/RealRama2120/DeadSpace2008CompleteInputFix
+기준 revision: ae3bc1508aeefe45fcdc8b03a45a0b68a6e543bc
 
 설치 후 Dead Space\DS1K_Patch\licenses 폴더에서 다음 라이선스 전문을 확인할 수
 있습니다.
 
 - DeadSpace2008Fixes-MIT.txt
+- DeadSpace2008CompleteInputFix-MIT.txt
 - MinHook-BSD-2-Clause.txt
 - SDL3-zlib.txt
 - NanumBarunGothic-OFL-1.1.txt

@@ -39,7 +39,8 @@ build.cmd
 스크립트는 다음을 수행한다.
 
 1. `src/dllmain.cpp`를 Win32 `ds1k_utf8.dll`로 빌드한다.
-2. 수정된 DeadSpace2008Fixes를 Win32 `xinput1_3.dll`로 빌드한다.
+2. 수정된 DeadSpace2008Fixes와 CompleteInputFix 입력 코드를 Win32 `xinput1_3.dll`로
+   함께 빌드한다. 별도 입력 프록시는 설치하지 않는다.
 3. SDL3 런타임을 함께 `dist/`로 복사한다.
 
 중간 파일은 `%TEMP%\deadspace-1-kr-patch-native`와 `%TEMP%\ds1k-fixes-build`에 생성된다.
@@ -56,7 +57,7 @@ build-assets.cmd
 
 다음 파일이 `%TEMP%\deadspace-1-kr-patch-assets`에 생성된다.
 
-- `BuildPocAssets.exe`: 번역 LCH2와 메뉴·자막·기록 본문용 네 UI 폰트 아틀라스 생성
+- `BuildPocAssets.exe`: 번역 LCH2와 일반 텍스트용 일곱 폰트 아틀라스 생성
 - `GenerateTranslationCsv.exe`: 원본 LH2와 과거 `Launcher.xml`에서 CSV 생성
 
 `BuildPocAssets.exe`와 같은 폴더 또는 DLL 검색 경로에 `squish64.dll`을 둔다.
@@ -72,14 +73,23 @@ build-assets.cmd
 ```text
 FFN/0105_russellsquare32.inf
 FFN/0106_briemakademistdsemibold32.inf
+FFN/0107_serpentinebold32.inf
 FFN/0108_eurostileltstdbold32.inf
 FFN/0109_rotissansserif32.inf
+FFN/0110_timesrussian32.inf
+FFN/0111_timesczhupl32.inf
 tg4h/0012_russellsquare32.tg4h
 tg4h/0010_rotissansserif32.tg4h
+tg4h/0014_serpentinebold32.tg4h
+tg4h/0016_timesczhupl32.tg4h
+tg4h/0018_timesrussian32.tg4h
 tg4d/0013_russellsquare32.tg4d
 tg4d/0001_briemakademistdsemibold32.tg4d
 tg4d/0007_eurostileltstdbold32.tg4d
 tg4d/0011_rotissansserif32.tg4d
+tg4d/0015_serpentinebold32.tg4d
+tg4d/0017_timesczhupl32.tg4d
+tg4d/0019_timesrussian32.tg4d
 ```
 
 실행 형식:
@@ -151,7 +161,7 @@ $nsisRoot = .\scripts\prepare-nsis.ps1
 이전 배포판에서 바로 업그레이드하기 위한 선택 호환 입력이다.
 
 스크립트는 알려진 Steam·EA App 원본과 레거시 입력 SHA-256을 확인한 뒤 작업한다.
-생성된 `deadspace1-kr-v0.3.1.pat`와 `manifest.json`을 함께 커밋한다. 원본 또는 완성 STR는
+생성된 `deadspace1-kr-v0.4.0.pat`와 `manifest.json`을 함께 커밋한다. 원본 또는 완성 STR는
 커밋하지 않는다.
 
 DLL과 배포 파일을 `dist`에 준비한 뒤 설치 마법사를 로컬에서 빌드할 수 있다.
@@ -162,7 +172,7 @@ $nsisRoot = .\scripts\prepare-nsis.ps1
 .\scripts\build-installer.ps1 -NsisRoot $nsisRoot
 ```
 
-출력 파일명은 `DeadSpace1-KR-0.3.1.exe`다. 새 설치기는 깨끗한 임시 게임 폴더에서
+출력 파일명은 `DeadSpace1-KR-0.4.0.exe`다. 새 설치기는 깨끗한 임시 게임 폴더에서
 최초 설치, 기존판 업그레이드, 설정 보존, 백업 손실 시 무변경 중단, 원본 복원
 후 백업 재구성, 제거 및 원본 해시 복원을 모두 확인한다.
 
@@ -188,7 +198,7 @@ cargo test --manifest-path linux-installer/Cargo.toml --locked
 DS1K_GIT_HASH=$(git rev-parse --short=8 HEAD) ./scripts/build-appimage.sh
 ```
 
-결과는 `dist/DeadSpace1-KR-0.3.1-x86_64.AppImage`다. 설치기는 Steam 라이브러리를
+결과는 `dist/DeadSpace1-KR-0.4.0-x86_64.AppImage`다. 설치기는 Steam 라이브러리를
 자동 탐색하며 수동 폴더 선택도 지원한다. 설치 후 GUI의 `옵션 복사` 버튼으로
 `WINEDLLOVERRIDES="xinput1_3=n,b" %command%`를 Steam 실행 옵션에 넣어야 한다.
 
@@ -202,12 +212,13 @@ Windows Server 2022와 Ubuntu 빌드를 수행한다. SDL 3.2.8 공식 Visual C+
 패키지는 고정된 URL과 SHA-256으로 검증한 뒤 사용한다.
 
 CI는 고정 URL과 SHA-256으로 NSIS 3.12도 검증해 준비한 뒤 설치 마법사를 만든다.
-결과는 `actions/upload-artifact@v7`의 단일 파일 모드(`archive: false`)로 각각
-업로드하므로 사용자용 artifact 자체가 ZIP이 아닌 다음 실행 파일이다.
+`scripts/test-input.cmd`로 게임을 실행하지 않는 두 입력 변환 단위 검사도 수행한다.
+`actions/upload-artifact@v7`은 고정 이름 `nightly-windows`, `nightly-linux`의 ZIP에
+다음 설치 파일을 각각 하나씩 업로드한다.
 
 ```text
-DeadSpace1-KR-0.3.1.exe
-DeadSpace1-KR-0.3.1-x86_64.AppImage
+DeadSpace1-KR-0.4.0.exe
+DeadSpace1-KR-0.4.0-x86_64.AppImage
 ```
 
 설치 파일에는 DLL, 기본 설정, 문서, 라이선스와 VPatch 차등 데이터가 들어간다. 게임
@@ -215,5 +226,5 @@ DeadSpace1-KR-0.3.1-x86_64.AppImage
 STR가 있어야 설치를 완료할 수 있다. `main` 브랜치 push 빌드가 성공하면 CI는 `nightly`
 프리릴리스의 Windows EXE와 Linux AppImage 중 현재 버전과 같은 이름의 자산만
 교체한다. 이전 버전 자산은 삭제하지 않는다. README의 고정 주소는 현재 버전 릴리스
-자산을 가리킨다. nightly.link는 현재 `archive: false` 비압축 artifact를 지원하지
-않는다.
+자산을 가리킨다. ZIP artifact의 이름은 버전·커밋 해시 없이 유지해 nightly.link에서도
+최신 빌드를 받을 수 있다.

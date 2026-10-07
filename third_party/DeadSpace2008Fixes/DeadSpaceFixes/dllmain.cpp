@@ -4,6 +4,7 @@
 #include "Fixes/Fixes.h"
 #include "Patches/Patches.h"
 #include "Features/Features.h"
+#include "Features/Input/InputFix.h"
 
 #include <functional>
 
@@ -62,7 +63,7 @@ namespace {
 	}
 }
 
-DWORD WINAPI MainThread(LPVOID)
+DWORD WINAPI MainThread(LPVOID parameter)
 {
 	//todo: add option to switch to debug mode via flag/config option
 
@@ -78,6 +79,7 @@ DWORD WINAPI MainThread(LPVOID)
 	LoadLibraryW(L"ds1k_utf8.dll");
 
 	ApplyAllModules();
+	Features::Input::CompleteInputFix::StartMouseCameraFix(static_cast<HMODULE>(parameter));
 
 	return 0;
 }

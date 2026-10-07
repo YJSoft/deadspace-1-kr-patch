@@ -913,6 +913,21 @@ internal static class BuildPocAssets
                     "rotissansserif32",
                     32, 32,
                     25.0f);
+            var serpentine = new FontAsset(
+                    @"FFN\0107_serpentinebold32.inf",
+                    @"tg4h\0014_serpentinebold32.tg4h",
+                    @"tg4d\0015_serpentinebold32.tg4d",
+                    "serpentinebold32", 32, 32, 25.0f);
+            var timesRussian = new FontAsset(
+                    @"FFN\0110_timesrussian32.inf",
+                    @"tg4h\0018_timesrussian32.tg4h",
+                    @"tg4d\0019_timesrussian32.tg4d",
+                    "timesrussian32", 32, 32, 25.0f);
+            var timesCzHuPl = new FontAsset(
+                    @"FFN\0111_timesczhupl32.inf",
+                    @"tg4h\0016_timesczhupl32.tg4h",
+                    @"tg4d\0017_timesczhupl32.tg4d",
+                    "timesczhupl32", 32, 32, 25.0f);
 
             // Database text-log bodies use Rotis Sans Serif rather than the
             // three fonts used by menus and subtitles. The Chinese container
@@ -921,6 +936,11 @@ internal static class BuildPocAssets
             // was present. Give it the same expanded FFN/texture capacity as
             // Russell Square before drawing the shared Nanum Barun Gothic set.
             ExpandFontFromTemplate(args[1], russellSquare, rotisSans);
+            // Door signs and additional language paths use these fonts.
+            // Byte/Hydro/Button resources are symbols, not natural-language text.
+            ExpandFontFromTemplate(args[1], russellSquare, serpentine);
+            ExpandFontFromTemplate(args[1], russellSquare, timesRussian);
+            ExpandFontFromTemplate(args[1], russellSquare, timesCzHuPl);
 
             var fonts = new[]
             {
@@ -928,6 +948,9 @@ internal static class BuildPocAssets
                 briemAkademi,
                 eurostile,
                 rotisSans,
+                serpentine,
+                timesRussian,
+                timesCzHuPl,
             };
 
             using (var privateFonts = new PrivateFontCollection())

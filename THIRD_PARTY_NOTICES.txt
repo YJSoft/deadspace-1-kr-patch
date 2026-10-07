@@ -1,6 +1,12 @@
 DS1K test build includes and modifies code from DeadSpace2008Fixes:
 https://github.com/seamusduncmcgrath/DeadSpace2008Fixes
-Upstream revision: 975836ed1c7de5fd447d3694324fecdc870c8719
+Upstream revision: c662b942f8f8f982b1a1e041dd24172c6db8352f
+
+Controller transforms and raw mouse camera hooks are adapted from
+DeadSpace2008CompleteInputFix by Rama2120:
+https://github.com/RealRama2120/DeadSpace2008CompleteInputFix
+Upstream revision: ae3bc1508aeefe45fcdc8b03a45a0b68a6e543bc
+Used under the MIT License; the original standalone loader is not included.
 
 The full subtitle layout/draw scaling design and signatures are adapted from
 DSOpt by Luminous:
@@ -13,6 +19,7 @@ The generated game font atlases use NanumBarunGothic Regular, Copyright (c)
 The complete applicable license notices are included under third_party:
 
 - DeadSpace2008Fixes/LICENSE
+- DeadSpace2008CompleteInputFix/LICENSE
 - licenses/DSOpt-MIT.txt
 - licenses/MinHook-BSD-2-Clause.txt
 - licenses/SDL3-zlib.txt

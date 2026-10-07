@@ -5,6 +5,7 @@ call "%~dp0tools\vsdevcmd.cmd" x86
 if errorlevel 1 exit /b %errorlevel%
 
 set "UPSTREAM=%~dp0third_party\DeadSpace2008Fixes\DeadSpaceFixes"
+set "INPUT_FIX=%~dp0third_party\DeadSpace2008CompleteInputFix\src\payload"
 set "BUILD_ROOT=%TEMP%\ds1k-fixes-build"
 if not exist "%BUILD_ROOT%" mkdir "%BUILD_ROOT%"
 if not exist "%BUILD_ROOT%\obj" mkdir "%BUILD_ROOT%\obj"
@@ -12,7 +13,7 @@ if not exist "%~dp0dist" mkdir "%~dp0dist"
 
 cl.exe /nologo /LD /MT /O2 /Oi /GS /Gy /EHsc /std:c++20 /permissive- /utf-8 /W3 ^
   /DWIN32 /DNDEBUG /D_WINDOWS /D_USRDLL /DDIRECTINPUT_VERSION=0x0800 ^
-  /I"%UPSTREAM%" /I"%UPSTREAM%\include" ^
+  /I"%UPSTREAM%" /I"%UPSTREAM%\include" /I"%INPUT_FIX%" ^
   /Fo"%BUILD_ROOT%\obj\\" /Fd"%BUILD_ROOT%\obj\DeadSpaceFixes.pdb" ^
   "%UPSTREAM%\Config.cpp" ^
   "%UPSTREAM%\dllmain.cpp" ^
@@ -22,6 +23,11 @@ cl.exe /nologo /LD /MT /O2 /Oi /GS /Gy /EHsc /std:c++20 /permissive- /utf-8 /W3 
   "%UPSTREAM%\Features\Graphics\D3D9Device.cpp" ^
   "%UPSTREAM%\Features\Graphics\FrameRateCap.cpp" ^
   "%UPSTREAM%\Features\Input\SdlGamepad.cpp" ^
+  "%UPSTREAM%\Features\Input\InputFix.cpp" ^
+  "%INPUT_FIX%\controller_transform.cpp" ^
+  "%INPUT_FIX%\mouse_transform.cpp" ^
+  "%INPUT_FIX%\mouse_hook.cpp" ^
+  "%INPUT_FIX%\logging.cpp" ^
   "%UPSTREAM%\Fixes\Graphics\SubtitleScale.cpp" ^
   "%UPSTREAM%\Fixes\Graphics\VSync.cpp" ^
   "%UPSTREAM%\Fixes\Input\LegacyDirectInput.cpp" ^

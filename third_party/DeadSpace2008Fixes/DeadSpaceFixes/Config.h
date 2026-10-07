@@ -8,6 +8,8 @@ namespace Config {
 		extern bool LegacyDirectInput;  // PatchOutDInput8
 		extern bool LoadingScreenDelay; // SkipLoadingScreenDelay
 		extern bool HighPrecisionTimer; // UseHighPrecisionTimer
+		extern bool ControllerDeadzone; // FixControllerDeadzone
+		extern bool RawMouseCamera;     // FixRawMouseCamera
 	}
 
 	namespace Patches {

@@ -21,10 +21,10 @@ SetCompress off
 !endif
 
 !define PRODUCT_NAME "Dead Space 1 한국어 개선 패치"
-!define PRODUCT_VERSION "0.3.1"
+!define PRODUCT_VERSION "0.4.0"
 !define PRODUCT_PUBLISHER "YJSoft"
 !define REPO_ROOT "${__FILEDIR__}\.."
-!define PATCH_FILE "${REPO_ROOT}\packaging\patches\deadspace1-kr-v0.3.1.pat"
+!define PATCH_FILE "${REPO_ROOT}\packaging\patches\deadspace1-kr-v0.4.0.pat"
 !define STEAM_LOCALIZATION_FILE "12F4D5F8.str"
 !define PATCH_LOCALIZATION_FILE "D8CBB618.str"
 !ifdef TEST_BUILD
@@ -43,7 +43,7 @@ BrandingText "${PRODUCT_NAME} ${PRODUCT_VERSION} (${GIT_HASH})"
 ShowInstDetails show
 ShowUninstDetails show
 
-VIProductVersion "0.3.1.0"
+VIProductVersion "0.4.0.0"
 VIAddVersionKey /LANG=1042 "ProductName" "${PRODUCT_NAME}"
 VIAddVersionKey /LANG=1042 "ProductVersion" "${PRODUCT_VERSION}"
 VIAddVersionKey /LANG=1042 "CompanyName" "${PRODUCT_PUBLISHER}"
@@ -158,7 +158,7 @@ backup_localization_${TAG}_done:
 !macro TryVpatch SOURCE OUTPUT FLAG TAG
   StrCpy ${FLAG} "0"
   Delete "${OUTPUT}"
-  vpatch::vpatchfile "$PLUGINSDIR\deadspace1-kr-v0.3.1.pat" "${SOURCE}" "${OUTPUT}"
+  vpatch::vpatchfile "$PLUGINSDIR\deadspace1-kr-v0.4.0.pat" "${SOURCE}" "${OUTPUT}"
   Pop $PatchResult
   StrCpy $0 $PatchResult 2
   StrCmp $0 "OK" 0 try_vpatch_${TAG}_done
@@ -337,7 +337,7 @@ upgrade_sources_ready:
 config_snapshot_done:
 
   SetOutPath "$PLUGINSDIR"
-  File /oname=deadspace1-kr-v0.3.1.pat "${PATCH_FILE}"
+  File /oname=deadspace1-kr-v0.4.0.pat "${PATCH_FILE}"
 
 patch_attempt:
   !insertmacro TryVpatch "$FontSource" "$PLUGINSDIR\text_assets_global.str" "$FontPatchOk" "font_source"
@@ -436,6 +436,7 @@ config_install_done:
   File "${REPO_ROOT}\packaging\patches\manifest.json"
   SetOutPath "$INSTDIR\DS1K_Patch\licenses"
   File /oname=DeadSpace2008Fixes-MIT.txt "${REPO_ROOT}\third_party\DeadSpace2008Fixes\LICENSE"
+  File /oname=DeadSpace2008CompleteInputFix-MIT.txt "${REPO_ROOT}\third_party\DeadSpace2008CompleteInputFix\LICENSE"
   File "${REPO_ROOT}\third_party\licenses\DSOpt-MIT.txt"
   File "${REPO_ROOT}\third_party\licenses\MinHook-BSD-2-Clause.txt"
   File "${REPO_ROOT}\third_party\licenses\SDL3-zlib.txt"

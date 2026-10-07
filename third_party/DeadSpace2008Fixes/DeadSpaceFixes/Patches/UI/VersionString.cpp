@@ -14,17 +14,17 @@ namespace Patches {
 				uintptr_t versionAddress = Utils::FindPattern(hExe, versionSignature);
 				if (versionAddress != 0)
 				{
-					char* pVersionString = *reinterpret_cast<char**>(versionAddress + 8);
-					LOG_DEBUG("[Patches/UI/VersionString]", "Found version number at 0x%p", pVersionString);
-					LOG_DEBUG("[Patches/UI/VersionString]", "Game version is %s", pVersionString);
+					// Upstream c662b94: replace the format pointer rather than
+					// overwriting the game's short, shared version buffer.
+					char** ppFormatString = reinterpret_cast<char**>(versionAddress + 1);
 
-					const char* customVersion = "Dead Space KR 0.3.1\n번역 검수용 버전";
+					static const char customVersion[] = "Dead Space KR 0.4.0\n번역 검수용 버전";
 
 					DWORD oldProtect;
-					if (VirtualProtect(pVersionString, 100, PAGE_EXECUTE_READWRITE, &oldProtect))
+					if (VirtualProtect(ppFormatString, sizeof(char*), PAGE_EXECUTE_READWRITE, &oldProtect))
 					{
-						strcpy_s(pVersionString, 100, customVersion);
-						VirtualProtect(pVersionString, 100, oldProtect, &oldProtect);
+						*ppFormatString = const_cast<char*>(customVersion);
+						VirtualProtect(ppFormatString, sizeof(char*), oldProtect, &oldProtect);
 						LOG_INFO("[Patches/UI/VersionString]", "Set custom game version string to %s", customVersion);
 					}
 				}

@@ -8,6 +8,7 @@ Dead Space.exe
        ├─ 실제 System32 XInput 전달
        ├─ MinHook 기반 수정 기능
        ├─ SDL3 컨트롤러 계층
+       ├─ CompleteInputFix 오른쪽 스틱/마우스 카메라 보정
        └─ LoadLibrary(ds1k_utf8.dll)
             └─ 두 게임 문자열 루프의 UTF-8 처리 훅
 ```
@@ -63,8 +64,9 @@ App판에서는 기존 파일을 백업한다. VPatch는 두 에디션의 원본
 
 ## 글꼴 리소스
 
-메뉴·자막용 세 글꼴과 기록 자료 본문용 Rotis Sans Serif 글꼴은 같은
-나눔바른고딕 Regular 패밀리로 완전히 다시 그린다.
+Russell Square, Briem Akademi, Eurostile, Rotis Sans Serif, Serpentine Bold,
+Times Russian, Times CZ/HU/PL의 일곱 일반 텍스트 글꼴을 같은 나눔바른고딕 Regular
+패밀리로 완전히 다시 그린다. Byte·Hydro·Buttons의 아이콘/특수 문자는 보존한다.
 
 - 아틀라스: 2048×1024, DXT5, 10 mip levels
 - 논리 셀 상한: 32×32
@@ -74,7 +76,7 @@ App판에서는 기존 파일을 백업한다. VPatch는 두 에디션의 원본
 - advance: 나눔바른고딕의 실제 측정값
 
 Steam 원본 FFN은 필요한 기존 문자 목록을 결정하는 데만 사용한다. 픽셀과 metric은
-재사용하지 않는다. CSV에서 발견한 비ASCII 문자와 원본 문자 목록을 합쳐 세 아틀라스에
+재사용하지 않는다. CSV에서 발견한 비ASCII 문자와 원본 문자 목록을 합쳐 일곱 아틀라스에
 동일하게 생성한다. 따라서 한 문장 안의 영문과 한글이 서로 다른 폰트 기준선·크기를
 사용하지 않는다.
 
@@ -84,13 +86,17 @@ FFN에는 모든 글자를 32×32로 강제하지 않는다. 실제 외곽 폭·
 
 Rotis Sans Serif 원본 컨테이너는 190개 글리프만 담을 수 있어 한국어 기록 본문을
 표시할 수 없다. 자산 생성기는 Russell Square의 확장 컨테이너와 텍스처 헤더를 복제한
-뒤 내부 글꼴 이름을 Rotis Sans Serif로 바꾸고, 네 글꼴을 각각 독립된 나눔바른고딕
+뒤 내부 글꼴 이름을 대상 글꼴 이름으로 바꾸고, 일곱 글꼴을 각각 독립된 나눔바른고딕
 아틀라스로 다시 그린다. 확장 FFN 작업본은 새 글리프를 넣을 충분한 레코드 수를
 제공하는 컨테이너 역할만 하며 저장소에는 해당 제3자 리소스를 포함하지 않는다.
 
+0.4.0에서는 원래 한글 글리프가 없었던 Serpentine Bold와 두 Times 글꼴도 같은
+방식으로 확장한다. 챕터 2 제보의 Main Lab/Bio Lab/Imaging Diagnostics 번역 ID는
+기존 CSV에 이미 있었으므로 번역문을 다시 바꾸지 않고 글꼴 리소스를 보완한다.
+
 ## DeadSpace2008Fixes 통합 변경
 
-upstream revision `975836ed1c7de5fd447d3694324fecdc870c8719`을 기준으로 다음
+upstream revision `c662b942f8f8f982b1a1e041dd24172c6db8352f`을 기준으로 다음
 DS1K 전용 변경을 포함한다.
 
 - `dllmain.cpp`: 모듈 적용 표와 UTF-8 사이드카 로딩
@@ -103,11 +109,35 @@ DS1K 전용 변경을 포함한다.
   호출한 경우만 차단하여 Steam/SDL 스레드 충돌 방지
 - `SdlGamepad.cpp`: 이벤트가 잠시 없더라도 감시 스레드를 유지하고, 분리·재연결과
   XInput 호출 간의 컨트롤러 수명 동기화
-- `VersionString.cpp`: `Dead Space KR 0.3.1`과 `번역 검수용 버전` 표시
+- `VersionString.cpp`: `Dead Space KR 0.4.0`과 `번역 검수용 버전` 표시
+  (최신 upstream처럼 형식 문자열 포인터만 교체하며 공유 버퍼를 덮어쓰지 않는다.)
+
+최신 upstream의 자막 수정은 기존 DS1K의 전체 레이아웃/렌더 높이 보정과 중복되어
+추가 훅을 설치하지 않는다. 소스 폴더 재배치와 SDL 정적 링크 변경은 기능 변경이
+아니므로 기존 빌드 경로 및 검증된 SDL3 3.2.8 DLL 배포 방식을 유지한다. 디버그
+빌드 로그 기본 수준 변경은 반영한다.
 
 그 밖의 VSync, 타이머, 이방성 필터링, CPU affinity, DirectInput, 세이브 문자열,
 로딩 화면 수정은 upstream 구조를 유지한다. 새 문서·영상 로그를 F로 건너뛰는
 `SkipLoreVideos` 선택 기능도 포함한다.
+
+## CompleteInputFix 통합 변경
+
+기준 revision `ae3bc1508aeefe45fcdc8b03a45a0b68a6e543bc`의 MIT 입력 코드를
+메인 프록시에 직접 링크한다. 별도의 `version.dll` 로더나 XInput IAT 훅은 쓰지 않는다.
+기존 SDL3 결과와 실제 XInput 전달 결과에 각각 한 번만 오른쪽 스틱 역보정을 적용해
+게임 내부 `8689/32767` 데드존을 상쇄한다. 물리 데드존은 11%이며 사각형 바깥 범위를
+보존한다. 왼쪽 스틱·버튼·트리거는 변경하지 않는다.
+
+마우스 훅은 DirectInput 수집 이동량을 사용해 일반/무중력 카메라를 보정한다.
+게임의 감도와 축 반전 설정을 읽고, 마우스 이동이 없으면 원래 카메라 인자를 보존한다.
+일곱 실행 패턴·호출 대상·설정 주소를 확인한 뒤 스레드를 일시 중단하고 네 코드
+변경을 트랜잭션으로 적용한다. 실패하면 롤백하고 원래 입력을 유지한다. 기존 수정
+모듈 설치가 끝난 후 시작하므로 다른 훅 설치와 겹치지 않는다.
+
+설정은 `[Fixes]`의 `FixControllerDeadzone`, `FixRawMouseCamera`이며 기본값은 둘 다
+1이다. 설정 형식 버전은 5이고 이전 사용자 값은 유지하며 새 키만 보충한다.
+원본 입력 모듈의 설치 로그는 `DeadSpaceCompleteInputFix.log`에 기록한다.
 
 ## 안전 원칙
 
