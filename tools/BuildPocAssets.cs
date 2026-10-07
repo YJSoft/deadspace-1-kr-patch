@@ -629,10 +629,11 @@ internal static class BuildPocAssets
             target.EmbeddedName);
         File.WriteAllBytes(targetInf, expandedInf);
 
-        File.Copy(
-            Path.Combine(workRoot, template.Tg4h),
-            Path.Combine(workRoot, target.Tg4h),
-            true);
+        // TG4H is not just an atlas layout: it contains the texture's resource
+        // ID and variable-length name/format strings. Copying the template's
+        // header aliases every expanded font to Russell Square and leaves the
+        // STR directory's resource ID inconsistent with the header. PatchFont
+        // rebuilds only the layout fields in each font's own clean header.
         File.Copy(
             Path.Combine(workRoot, template.Tg4d),
             Path.Combine(workRoot, target.Tg4d),
@@ -642,6 +643,47 @@ internal static class BuildPocAssets
             "Font: expanded {0} from the {1} container",
             target.EmbeddedName,
             template.EmbeddedName);
+    }
+
+    private static void UpdateTextureHeader(
+        string workRoot,
+        string steamRoot,
+        FontAsset asset,
+        int dataLength)
+    {
+        byte[] header = File.ReadAllBytes(Path.Combine(steamRoot, asset.Tg4h));
+        if (header.Length < 76 || ReadU32(header, 8) != 0x14 ||
+            ReadU32(header, 12) != 0x18)
+        {
+            throw new InvalidDataException("Unsupported TG4H header: " + asset.Tg4h);
+        }
+        int nameOffset = checked((int)ReadU32(header, 0x18));
+        byte[] name = Encoding.ASCII.GetBytes(asset.EmbeddedName + "\0");
+        if (nameOffset < 0 || nameOffset > header.Length - name.Length ||
+            !header.Skip(nameOffset).Take(name.Length).SequenceEqual(name))
+        {
+            throw new InvalidDataException("TG4H font identity mismatch: " + asset.Tg4h);
+        }
+        int formatOffset = checked((int)ReadU32(header, 0x2C));
+        if (formatOffset < 0 || formatOffset > header.Length - 15 ||
+            header[formatOffset + 10] != 1)
+        {
+            throw new InvalidDataException("Unsupported TG4H data descriptor: " + asset.Tg4h);
+        }
+        int formatNameOffset = checked((int)ReadU32(header, formatOffset + 1));
+        byte[] formatName = Encoding.ASCII.GetBytes("DXT5\0");
+        if (formatNameOffset < 0 || formatNameOffset > header.Length - formatName.Length ||
+            !header.Skip(formatNameOffset).Take(formatName.Length).SequenceEqual(formatName))
+        {
+            throw new InvalidDataException("Expected a DXT5 font texture: " + asset.Tg4h);
+        }
+
+        WriteU32(header, 0x1C, checked((uint)dataLength));
+        WriteU16(header, 0x20, AtlasWidth);
+        WriteU16(header, 0x22, AtlasHeight);
+        header[0x26] = MipCount;
+        WriteU32(header, formatOffset + 11, checked((uint)dataLength));
+        File.WriteAllBytes(Path.Combine(workRoot, asset.Tg4h), header);
     }
 
     private static void WriteGlyphRectangle(byte[] inf, int record, Rectangle rectangle)
@@ -832,6 +874,7 @@ internal static class BuildPocAssets
                         "Unexpected TG4D mip-chain size: " + result.Length + " vs " + compressed.Length);
                 }
                 File.WriteAllBytes(tg4dPath, result);
+                UpdateTextureHeader(workRoot, steamRoot, asset, result.Length);
 
                 byte[] verifiedRgba = new byte[AtlasWidth * AtlasHeight * 4];
                 DecompressImage(
